@@ -16,7 +16,7 @@ This document describes the technical design of APK Manager. It is updated as th
 | Area | Choice |
 |---|---|
 | Language / build | Kotlin, Gradle (Kotlin DSL) with version catalog and convention plugins, JDK 21 |
-| SDK levels | `minSdk` 26, `targetSdk` 36, `compileSdk` 37 |
+| SDK levels | `minSdk` 26, `targetSdk` 37, `compileSdk` 37.2 |
 | UI | Jetpack Compose, Material 3 (Expressive components), Material Symbols icons |
 | Navigation | Navigation 3 |
 | Dependency injection | Hilt |
