@@ -22,6 +22,7 @@ composeBom = "2026.11.01"
 # DI
 hilt = "2.60.1"
 # UI
+coil = "3.6.3"
 materialKolor = "5.0.1"
 # Kotlin
 kotlinxCoroutines = "1.11.0"
@@ -73,6 +74,8 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 retrofit-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 junit4 = { module = "junit:junit", version.ref = "junit4" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 materialkolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }

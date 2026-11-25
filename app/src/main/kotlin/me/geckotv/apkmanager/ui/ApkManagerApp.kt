@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -27,7 +31,8 @@ import me.geckotv.apkmanager.core.designsystem.component.NavigationToolbar
 import me.geckotv.apkmanager.core.designsystem.component.NavigationToolbarItem
 import me.geckotv.apkmanager.feature.account.AccountRoute
 import me.geckotv.apkmanager.feature.account.navigation.AccountNavKey
-import me.geckotv.apkmanager.feature.apps.AppsScreen
+import me.geckotv.apkmanager.feature.apps.AddAppFloatingActionButton
+import me.geckotv.apkmanager.feature.apps.AppsRoute
 import me.geckotv.apkmanager.feature.apps.navigation.AppsNavKey
 import me.geckotv.apkmanager.feature.onboarding.OnboardingRoute
 import me.geckotv.apkmanager.feature.settings.SettingsRoute
@@ -68,6 +73,7 @@ private fun MainNavigation(modifier: Modifier = Modifier) {
     val currentDestination = backStack.currentTopLevelDestination()
     // The toolbar is only shown on top-level destinations, not on detail screens such as the account.
     val showNavigationToolbar = TopLevelDestination.entries.any { it.navKey == backStack.lastOrNull() }
+    var showAddAppSheet by rememberSaveable { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize()) {
         NavDisplay(
@@ -82,7 +88,14 @@ private fun MainNavigation(modifier: Modifier = Modifier) {
             popTransitionSpec = { fadeIn() togetherWith fadeOut() },
             entryProvider =
                 entryProvider {
-                    entry<AppsNavKey> { AppsScreen(bottomContentPadding = NavigationToolbarClearance) }
+                    entry<AppsNavKey> {
+                        AppsRoute(
+                            showAddAppSheet = showAddAppSheet,
+                            onAddAppSheetDismiss = { showAddAppSheet = false },
+                            onAddAppClick = { showAddAppSheet = true },
+                            bottomContentPadding = NavigationToolbarClearance,
+                        )
+                    }
                     entry<SettingsNavKey> {
                         SettingsRoute(
                             onOpenAccount = { backStack.add(AccountNavKey) },
@@ -106,6 +119,7 @@ private fun MainNavigation(modifier: Modifier = Modifier) {
             MainNavigationToolbar(
                 currentDestination = currentDestination,
                 onDestinationSelect = { destination -> backStack.navigateToTopLevel(destination) },
+                onAddAppClick = { showAddAppSheet = true },
             )
         }
     }
@@ -115,6 +129,7 @@ private fun MainNavigation(modifier: Modifier = Modifier) {
 private fun MainNavigationToolbar(
     currentDestination: TopLevelDestination,
     onDestinationSelect: (TopLevelDestination) -> Unit,
+    onAddAppClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavigationToolbar(
@@ -129,5 +144,12 @@ private fun MainNavigationToolbar(
         selectedIndex = currentDestination.ordinal,
         onItemSelect = { index -> onDestinationSelect(TopLevelDestination.entries[index]) },
         modifier = modifier,
+        // Apps are added from the apps list only.
+        floatingActionButton =
+            if (currentDestination == TopLevelDestination.Apps) {
+                { AddAppFloatingActionButton(onClick = onAddAppClick) }
+            } else {
+                null
+            },
     )
 }

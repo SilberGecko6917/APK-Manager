@@ -7,7 +7,7 @@ Add a GitHub repository, and APK Manager watches its releases, picks the right A
 verifies it and installs updates for you, optionally fully automatically in the background.
 
 > [!NOTE]
-> APK Manager is in **early development**. Nothing is released yet. See the [roadmap](docs/ROADMAP.md).
+> APK Manager is in **early development**. Early pre-releases are available on the [Releases](https://github.com/SilberGecko6917/APK-Manager/releases) page. See the [roadmap](docs/ROADMAP.md).
 
 ## Features
 

@@ -1,6 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_apps_title">Apps</string>
+
+    <!-- Empty state -->
     <string name="feature_apps_empty_title">No apps yet</string>
-    <string name="feature_apps_empty_message">Apps you track from GitHub releases will show up here, together with their updates.</string>
+    <string name="feature_apps_empty_message">Track apps from GitHub releases to see their updates here. Add one with its repository URL or owner/repo.</string>
+    <string name="feature_apps_empty_add">Add app</string>
+
+    <!-- App list -->
+    <string name="feature_apps_group_updates">Updates available</string>
+    <string name="feature_apps_group_up_to_date">Up to date</string>
+    <string name="feature_apps_group_not_installed">Not installed</string>
+    <!-- Group name and the number of apps in the group, e.g. "Up to date · 3" -->
+    <string name="feature_apps_group_header">%1$s · %2$d</string>
+    <!-- Installed version name and the latest release tag, e.g. "1.0.0 → v1.1.0" -->
+    <string name="feature_apps_status_update_available">%1$s → %2$s</string>
+    <string name="feature_apps_status_unknown">Installed %1$s · Latest %2$s</string>
+    <string name="feature_apps_status_no_release">No release found</string>
+    <!-- Latest release tag and repository, e.g. "v1.1.0 · owner/repo" -->
+    <string name="feature_apps_status_not_installed">%1$s · %2$s</string>
+    <string name="feature_apps_unknown_version">unknown</string>
+    <string name="feature_apps_pre_release">Pre-release</string>
+    <string name="feature_apps_private">Private</string>
+    <string name="feature_apps_archived">Archived</string>
+
+    <!-- Messages -->
+    <plurals name="feature_apps_message_check_failed">
+        <item quantity="one">Couldn\'t check %d app</item>
+        <item quantity="other">Couldn\'t check %d apps</item>
+    </plurals>
+    <string name="feature_apps_message_rate_limited_at">Rate limit reached, try again at %1$s</string>
+    <string name="feature_apps_message_rate_limited">Rate limit reached, try again later</string>
+    <string name="feature_apps_message_offline">No connection</string>
+    <string name="feature_apps_message_unauthorized">Your GitHub sign-in expired. Sign in again in Settings.</string>
+    <string name="feature_apps_message_added">Added %1$s</string>
+
+    <!-- Add app sheet -->
+    <string name="feature_apps_add_title">Add app</string>
+    <string name="feature_apps_add_content_description">Add app</string>
+    <string name="feature_apps_add_input_label">Repository</string>
+    <string name="feature_apps_add_input_placeholder">owner/repo or GitHub URL</string>
+    <string name="feature_apps_add_paste">Paste from clipboard</string>
+    <string name="feature_apps_add_look_up">Look up</string>
+    <string name="feature_apps_add_error_invalid">Enter a GitHub repository URL or owner/repo</string>
+    <string name="feature_apps_add_error_tracked">Already tracked</string>
+    <string name="feature_apps_add_loading">Looking up repository…</string>
+    <string name="feature_apps_add_back">Back</string>
+    <string name="feature_apps_add_confirm">Add</string>
+
+    <!-- Lookup errors -->
+    <string name="feature_apps_error_not_found">Repository not found. Private repositories need a GitHub sign-in with private access.</string>
+    <string name="feature_apps_error_rate_limited">GitHub rate limit reached</string>
+    <string name="feature_apps_error_rate_limited_at">Try again at %1$s.</string>
+    <string name="feature_apps_error_rate_limited_hint">Sign in for a higher limit.</string>
+    <string name="feature_apps_error_offline">No connection</string>
+    <string name="feature_apps_error_unauthorized">Your GitHub sign-in expired. Sign in again in Settings.</string>
+    <string name="feature_apps_error_generic">Something went wrong. Try again.</string>
+    <string name="feature_apps_error_retry">Try again</string>
+
+    <!-- Preview -->
+    <string name="feature_apps_release_section">Release</string>
+    <string name="feature_apps_release_none">No releases yet</string>
+    <string name="feature_apps_release_published">Published %1$s</string>
+    <string name="feature_apps_include_prereleases">Include pre-releases</string>
+    <string name="feature_apps_include_prereleases_summary">Also use beta and release candidate versions</string>
+    <string name="feature_apps_apk_section">APK</string>
+    <string name="feature_apps_apk_none">This release has no APK for this device</string>
+    <string name="feature_apps_apk_universal">Universal</string>
+    <string name="feature_apps_apk_not_compatible">Not compatible</string>
+    <!-- File size and ABI, e.g. "12 MB · arm64-v8a" -->
+    <string name="feature_apps_apk_details">%1$s · %2$s</string>
+    <string name="feature_apps_installed_section">Installed app</string>
+    <string name="feature_apps_installed_none">Not installed</string>
+    <string name="feature_apps_installed_choose">Choose app</string>
+
+    <!-- Package picker -->
+    <string name="feature_apps_picker_title">Installed app</string>
+    <string name="feature_apps_picker_search">Search apps</string>
+    <string name="feature_apps_picker_show_system">Show system apps</string>
+    <string name="feature_apps_picker_not_installed">Not installed yet</string>
+    <string name="feature_apps_picker_not_installed_summary">Track the app without linking an installed app</string>
+    <string name="feature_apps_picker_empty">No matching apps</string>
+
+    <!-- App actions sheet -->
+    <string name="feature_apps_actions_installed_version">Installed %1$s</string>
+    <string name="feature_apps_actions_latest_release">Latest %1$s</string>
+    <string name="feature_apps_actions_not_installed">Not installed</string>
+    <string name="feature_apps_actions_open_github">Open on GitHub</string>
+    <string name="feature_apps_actions_release_notes">Release notes</string>
+    <string name="feature_apps_actions_remove">Remove</string>
+    <string name="feature_apps_actions_remove_title">Remove %1$s?</string>
+    <string name="feature_apps_actions_remove_message">The app stays installed.</string>
+    <string name="feature_apps_actions_cancel">Cancel</string>
 </resources>
