@@ -31,4 +31,7 @@ class FakeUserSettingsRepository(
 
     override suspend fun setOnboardingCompleted(onboardingCompleted: Boolean) =
         state.update { it.copy(onboardingCompleted = onboardingCompleted) }
+
+    override suspend fun setSelfUpdatesTracked(selfUpdatesTracked: Boolean) =
+        state.update { it.copy(selfUpdatesTracked = selfUpdatesTracked) }
 }

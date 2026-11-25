@@ -15,6 +15,8 @@ android {
 
         val githubClientId = providers.gradleProperty("apkmanager.github.clientId").get()
         buildConfigField("String", "GITHUB_CLIENT_ID", "\"$githubClientId\"")
+        val selfRepository = providers.gradleProperty("apkmanager.github.repository").get()
+        buildConfigField("String", "SELF_REPOSITORY", "\"$selfRepository\"")
     }
 
     // Release signing is configured through environment variables, so the keystore and its

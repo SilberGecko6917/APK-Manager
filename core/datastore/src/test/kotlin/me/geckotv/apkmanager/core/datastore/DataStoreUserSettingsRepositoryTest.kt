@@ -44,6 +44,7 @@ class DataStoreUserSettingsRepositoryTest {
             repository.setUseAmoledBlack(true)
             repository.setHapticsEnabled(false)
             repository.setOnboardingCompleted(true)
+            repository.setSelfUpdatesTracked(true)
 
             repository.settings.test {
                 assertEquals(
@@ -53,6 +54,7 @@ class DataStoreUserSettingsRepositoryTest {
                         useAmoledBlack = true,
                         hapticsEnabled = false,
                         onboardingCompleted = true,
+                        selfUpdatesTracked = true,
                     ),
                     awaitItem(),
                 )

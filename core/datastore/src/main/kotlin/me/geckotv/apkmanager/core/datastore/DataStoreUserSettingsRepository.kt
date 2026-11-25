@@ -49,6 +49,10 @@ internal class DataStoreUserSettingsRepository
             dataStore.edit { it[Keys.ONBOARDING_COMPLETED] = onboardingCompleted }
         }
 
+        override suspend fun setSelfUpdatesTracked(selfUpdatesTracked: Boolean) {
+            dataStore.edit { it[Keys.SELF_UPDATES_TRACKED] = selfUpdatesTracked }
+        }
+
         private fun Preferences.toUserSettings(): UserSettings {
             val defaults = UserSettings()
             return UserSettings(
@@ -60,6 +64,7 @@ internal class DataStoreUserSettingsRepository
                 useAmoledBlack = this[Keys.USE_AMOLED_BLACK] ?: defaults.useAmoledBlack,
                 hapticsEnabled = this[Keys.HAPTICS_ENABLED] ?: defaults.hapticsEnabled,
                 onboardingCompleted = this[Keys.ONBOARDING_COMPLETED] ?: defaults.onboardingCompleted,
+                selfUpdatesTracked = this[Keys.SELF_UPDATES_TRACKED] ?: defaults.selfUpdatesTracked,
             )
         }
 
@@ -69,5 +74,6 @@ internal class DataStoreUserSettingsRepository
             val USE_AMOLED_BLACK = booleanPreferencesKey("use_amoled_black")
             val HAPTICS_ENABLED = booleanPreferencesKey("haptics_enabled")
             val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+            val SELF_UPDATES_TRACKED = booleanPreferencesKey("self_updates_tracked")
         }
     }

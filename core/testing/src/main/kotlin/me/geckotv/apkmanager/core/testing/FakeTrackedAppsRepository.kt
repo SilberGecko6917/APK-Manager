@@ -73,6 +73,25 @@ class FakeTrackedAppsRepository(
         return id
     }
 
+    override suspend fun trackRepository(
+        repository: GitHubRepository,
+        packageName: String,
+        displayName: String,
+        includePrereleases: Boolean,
+    ): Long =
+        findTrackedApp(repository) ?: addApp(
+            RepositoryPreview(
+                repository = repository,
+                description = null,
+                ownerAvatarUrl = null,
+                isPrivate = false,
+                isArchived = false,
+                stars = 0,
+                releases = emptyList(),
+            ),
+            AddAppOptions(packageName, includePrereleases, preferredAssetName = null),
+        ).also { id -> update(id) { it.copy(displayName = displayName) } }
+
     override suspend fun removeApp(id: Long) {
         apps.value = apps.value.filterNot { it.id == id }
     }
