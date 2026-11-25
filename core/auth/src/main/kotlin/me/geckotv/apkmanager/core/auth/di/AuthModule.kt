@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import me.geckotv.apkmanager.core.auth.AuthRepository
+import me.geckotv.apkmanager.core.auth.internal.CachedCredentialsProvider
 import me.geckotv.apkmanager.core.auth.internal.DefaultAuthRepository
 import me.geckotv.apkmanager.core.auth.internal.GitHubOAuthApi
 import me.geckotv.apkmanager.core.auth.internal.KeystoreTokenCipher
@@ -80,7 +81,7 @@ internal interface AuthBindingsModule {
     fun bindsAuthRepository(repository: DefaultAuthRepository): AuthRepository
 
     @Binds
-    fun bindsCredentialsProvider(repository: DefaultAuthRepository): GitHubCredentialsProvider
+    fun bindsCredentialsProvider(provider: CachedCredentialsProvider): GitHubCredentialsProvider
 
     @Binds
     fun bindsTokenCipher(cipher: KeystoreTokenCipher): TokenCipher

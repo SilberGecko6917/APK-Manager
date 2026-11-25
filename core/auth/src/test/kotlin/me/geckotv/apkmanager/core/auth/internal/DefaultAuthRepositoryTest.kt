@@ -53,14 +53,17 @@ class DefaultAuthRepositoryTest {
         )
     }
 
+    private val credentialsStore by lazy { CredentialsStore(dataStore, ReversingCipher) }
+
     private val repository by lazy {
         DefaultAuthRepository(
             deviceFlowClient = DeviceFlowClient(unusedOAuthApi(), GitHubOAuthConfig("client"), Clock.systemUTC()),
-            credentialsStore = CredentialsStore(dataStore, ReversingCipher),
+            credentialsStore = credentialsStore,
             network = network,
-            applicationScope = testScope.backgroundScope,
         )
     }
+
+    private val credentialsProvider by lazy { CachedCredentialsProvider(credentialsStore, testScope.backgroundScope) }
 
     @Test
     fun signInWithTokenStoresTheEncryptedTokenAndTheAccount() =
@@ -74,7 +77,7 @@ class DefaultAuthRepositoryTest {
             assertEquals(AuthMethod.PersonalAccessToken, account.authMethod)
             assertEquals(GitHubAccessLevel.Private, account.accessLevel)
             assertEquals(AuthState.SignedIn(account), repository.authState.first())
-            assertEquals("ghp_token", repository.token())
+            assertEquals("ghp_token", credentialsProvider.token())
             assertEquals("ghp_token", network.lastToken)
             // Only the encrypted form is written to disk.
             assertNotEquals("ghp_token", dataStore.data.first()[stringPreferencesKey("token")])
@@ -97,7 +100,7 @@ class DefaultAuthRepositoryTest {
 
             assertEquals(SignInResult.Failed(SignInFailure.InvalidToken), repository.signInWithToken("bad"))
             assertEquals(AuthState.SignedOut, repository.authState.first())
-            assertNull(repository.token())
+            assertNull(credentialsProvider.token())
         }
 
     @Test
@@ -121,7 +124,7 @@ class DefaultAuthRepositoryTest {
             repository.signOut()
 
             assertEquals(AuthState.SignedOut, repository.authState.first())
-            assertNull(repository.token())
+            assertNull(credentialsProvider.token())
         }
 
     @Test
