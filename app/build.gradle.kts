@@ -47,13 +47,26 @@ android {
 
 dependencies {
     implementation(projects.core.common)
+    implementation(projects.core.datastore)
     implementation(projects.core.designsystem)
+    implementation(projects.core.model)
+    implementation(projects.feature.apps)
+    implementation(projects.feature.onboarding)
+    implementation(projects.feature.settings)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
+    implementation(libs.kotlinx.serialization.core)
 
+    testImplementation(projects.core.testing)
     testImplementation(libs.junit4)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

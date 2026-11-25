@@ -17,7 +17,7 @@ The first usable version: track GitHub apps and install updates manually.
   - Typography (rounded variable font), shapes and motion
   - Grouped segmented lists, flexible top app bars, floating toolbar navigation, button groups, bottom sheets
   - Screenshot tests (Roborazzi) for light, dark and pitch black themes
-- [ ] **App shell** (`feat/app-shell`)
+- [x] **App shell** (`feat/app-shell`) (adaptive two-pane layouts follow with the app details screen)
   - Navigation 3 with predictive back and adaptive two-pane layouts
   - Onboarding: install-unknown-apps and notification permissions
   - Screen skeletons: Apps, Settings
