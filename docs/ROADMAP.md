@@ -24,7 +24,7 @@ The first usable version: track GitHub apps and install updates manually.
 - [x] **GitHub client** (`feat/github-client`)
   - REST and GraphQL clients, ETag caching, rate limit tracking
   - Release and asset models, tests against MockWebServer
-- [ ] **GitHub sign-in** (`feat/github-auth`)
+- [x] **GitHub sign-in** (`feat/github-auth`)
   - OAuth device flow (public access, optional private repo access)
   - Fine-grained personal access token as an alternative
   - Token encrypted with an Android Keystore key, excluded from backups

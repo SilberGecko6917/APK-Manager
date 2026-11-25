@@ -83,10 +83,11 @@ APK Manager has no server, so it cannot keep a client secret. GitHub's **OAuth d
 | Signed in + private repos | OAuth device flow, `repo` scope | All repositories the user can access | 5,000 requests/hour |
 | Personal access token | Fine-grained PAT with "Contents: Read" on selected repositories | Selected repositories only | 5,000 requests/hour |
 
-- The OAuth app's client ID is public and is set as a build config field. Device flow must be enabled in the OAuth app settings.
+- The OAuth app's client ID is public and is set as a build config field from the Gradle property `apkmanager.github.clientId` (see `gradle.properties`). Forks can point it at their own OAuth app. Device flow must be enabled in the OAuth app settings.
+- `:core:auth` runs the device flow (`DeviceFlowClient`), validates tokens against `GET /user` (the `X-OAuth-Scopes` header tells the access level of classic tokens) and implements `GitHubCredentialsProvider` for the network layer with an in-memory cache.
 - The `repo` scope is broad because OAuth apps have no read-only scope for private repositories. Users who want least privilege can use a fine-grained PAT instead.
 - Organizations with OAuth app access restrictions must approve the app before its tokens can read the organization's private repositories.
-- Tokens are encrypted with an AES-GCM key from the Android Keystore and stored in DataStore. They are excluded from backups and exports. (`androidx.security:security-crypto` is deprecated and not used.)
+- Tokens are encrypted with an AES-GCM key from the Android Keystore and stored in a dedicated DataStore file (`credentials`) that is excluded from backups and device transfers. A token that cannot be decrypted counts as signed out. (`androidx.security:security-crypto` is deprecated and not used.)
 - `401` responses are treated as "token expired or revoked", not as a rate limit.
 
 ## Update checking

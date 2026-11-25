@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Backup rules for Android 12+. Credentials will be excluded here once they exist. -->
+<!-- Backup rules for Android 12+. The GitHub token never leaves the device. -->
 <data-extraction-rules>
-    <cloud-backup />
-    <device-transfer />
+    <cloud-backup>
+        <exclude domain="file" path="datastore/credentials.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="datastore/credentials.preferences_pb" />
+    </device-transfer>
 </data-extraction-rules>

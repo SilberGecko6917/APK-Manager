@@ -48,6 +48,7 @@ private const val LICENSE_URL = "https://github.com/SilberGecko6917/APK-Manager/
  */
 @Composable
 fun SettingsRoute(
+    onOpenAccount: () -> Unit,
     modifier: Modifier = Modifier,
     bottomContentPadding: Dp = 0.dp,
     viewModel: SettingsViewModel = hiltViewModel(),
@@ -73,6 +74,7 @@ fun SettingsRoute(
         onHapticsChange = viewModel::setHapticsEnabled,
         onOpenSourceCode = { uriHandler.openUri(SOURCE_CODE_URL) },
         onOpenLicense = { uriHandler.openUri(LICENSE_URL) },
+        onOpenAccount = onOpenAccount,
         modifier = modifier,
         bottomContentPadding = bottomContentPadding,
     )
@@ -89,6 +91,7 @@ internal fun SettingsScreen(
     onHapticsChange: (Boolean) -> Unit,
     onOpenSourceCode: () -> Unit,
     onOpenLicense: () -> Unit,
+    onOpenAccount: () -> Unit,
     modifier: Modifier = Modifier,
     bottomContentPadding: Dp = 0.dp,
 ) {
@@ -113,6 +116,7 @@ internal fun SettingsScreen(
                 ),
         ) {
             if (uiState is SettingsUiState.Success) {
+                item(key = "account") { AccountSettings(onOpenAccount = onOpenAccount) }
                 item(key = "appearance") {
                     AppearanceSettings(
                         settings = uiState.settings,
@@ -196,6 +200,30 @@ private fun AppearanceSettings(
 }
 
 @Composable
+private fun AccountSettings(
+    onOpenAccount: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Section(modifier = modifier, title = stringResource(R.string.feature_settings_account)) {
+        item {
+            SectionItem(
+                headline = stringResource(R.string.feature_settings_github_account),
+                supportingText = stringResource(R.string.feature_settings_github_account_summary),
+                leadingContent = { SectionItemIcon(ApkManagerIcons.AccountCircle) },
+                trailingContent = {
+                    Icon(
+                        painter = painterResource(ApkManagerIcons.ChevronRight),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                onClick = onOpenAccount,
+            )
+        }
+    }
+}
+
+@Composable
 private fun AboutSettings(
     versionName: String,
     onOpenSourceCode: () -> Unit,
@@ -265,5 +293,6 @@ private fun SettingsScreenPreviewContent() {
         onHapticsChange = {},
         onOpenSourceCode = {},
         onOpenLicense = {},
+        onOpenAccount = {},
     )
 }

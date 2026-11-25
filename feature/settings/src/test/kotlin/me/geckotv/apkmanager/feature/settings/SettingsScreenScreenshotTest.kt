@@ -42,6 +42,7 @@ class SettingsScreenScreenshotTest {
                     onHapticsChange = {},
                     onOpenSourceCode = {},
                     onOpenLicense = {},
+                    onOpenAccount = {},
                 )
             }
         }

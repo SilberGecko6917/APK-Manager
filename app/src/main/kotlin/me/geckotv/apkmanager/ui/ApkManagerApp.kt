@@ -1,8 +1,11 @@
 package me.geckotv.apkmanager.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +25,8 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import me.geckotv.apkmanager.core.designsystem.component.NavigationToolbar
 import me.geckotv.apkmanager.core.designsystem.component.NavigationToolbarItem
+import me.geckotv.apkmanager.feature.account.AccountRoute
+import me.geckotv.apkmanager.feature.account.navigation.AccountNavKey
 import me.geckotv.apkmanager.feature.apps.AppsScreen
 import me.geckotv.apkmanager.feature.apps.navigation.AppsNavKey
 import me.geckotv.apkmanager.feature.onboarding.OnboardingRoute
@@ -61,6 +66,8 @@ fun ApkManagerApp(
 private fun MainNavigation(modifier: Modifier = Modifier) {
     val backStack = rememberNavBackStack(TopLevelDestination.entries.first().navKey)
     val currentDestination = backStack.currentTopLevelDestination()
+    // The toolbar is only shown on top-level destinations, not on detail screens such as the account.
+    val showNavigationToolbar = TopLevelDestination.entries.any { it.navKey == backStack.lastOrNull() }
 
     Box(modifier = modifier.fillMaxSize()) {
         NavDisplay(
@@ -76,26 +83,51 @@ private fun MainNavigation(modifier: Modifier = Modifier) {
             entryProvider =
                 entryProvider {
                     entry<AppsNavKey> { AppsScreen(bottomContentPadding = NavigationToolbarClearance) }
-                    entry<SettingsNavKey> { SettingsRoute(bottomContentPadding = NavigationToolbarClearance) }
+                    entry<SettingsNavKey> {
+                        SettingsRoute(
+                            onOpenAccount = { backStack.add(AccountNavKey) },
+                            bottomContentPadding = NavigationToolbarClearance,
+                        )
+                    }
+                    entry<AccountNavKey> { AccountRoute(onBack = { backStack.removeLastOrNull() }) }
                 },
         )
 
-        NavigationToolbar(
-            items =
-                TopLevelDestination.entries.map { destination ->
-                    NavigationToolbarItem(
-                        label = stringResource(destination.label),
-                        icon = destination.icon,
-                        selectedIcon = destination.selectedIcon,
-                    )
-                },
-            selectedIndex = currentDestination.ordinal,
-            onItemSelect = { index -> backStack.navigateToTopLevel(TopLevelDestination.entries[index]) },
+        AnimatedVisibility(
+            visible = showNavigationToolbar,
             modifier =
                 Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
                     .padding(bottom = 16.dp),
-        )
+            enter = fadeIn() + slideInVertically { it },
+            exit = fadeOut() + slideOutVertically { it },
+        ) {
+            MainNavigationToolbar(
+                currentDestination = currentDestination,
+                onDestinationSelect = { destination -> backStack.navigateToTopLevel(destination) },
+            )
+        }
     }
+}
+
+@Composable
+private fun MainNavigationToolbar(
+    currentDestination: TopLevelDestination,
+    onDestinationSelect: (TopLevelDestination) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    NavigationToolbar(
+        items =
+            TopLevelDestination.entries.map { destination ->
+                NavigationToolbarItem(
+                    label = stringResource(destination.label),
+                    icon = destination.icon,
+                    selectedIcon = destination.selectedIcon,
+                )
+            },
+        selectedIndex = currentDestination.ordinal,
+        onItemSelect = { index -> onDestinationSelect(TopLevelDestination.entries[index]) },
+        modifier = modifier,
+    )
 }
