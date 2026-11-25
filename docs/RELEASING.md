@@ -1,6 +1,6 @@
 # Releasing
 
-Releases are built and published by the [Release workflow](../.github/workflows/release.yml) when a version tag is pushed.
+Releases are built and published by the [Release workflow](../.github/workflows/release.yml) when a version tag is pushed or the workflow is started manually.
 
 ## One-time setup
 
@@ -42,12 +42,15 @@ base64 -w0 debug.keystore   # value for DEBUG_KEYSTORE_BASE64
 ## Publishing a release
 
 1. Make sure `main` is green and the roadmap/changelog are up to date.
-2. Tag the commit and push the tag:
+2. Start the release in one of two ways:
+   - **Push a tag:**
 
-   ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
-   ```
+     ```bash
+     git tag v0.1.0
+     git push origin v0.1.0
+     ```
+
+   - **Without a local checkout** (for example from a phone): open **Actions → Release → Run workflow**, keep `main` as the branch and enter the tag, e.g. `v0.1.0`. The workflow builds `main` and creates the tag on the commit it built.
 
 3. The workflow builds the signed APK and creates a GitHub release with:
    - `APK-Manager-<version>.apk` and its `.sha256` checksum
