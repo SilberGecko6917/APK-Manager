@@ -16,7 +16,8 @@ spotless {
     val ktlintVersion = libs.versions.ktlint.get()
     kotlin {
         target("**/*.kt")
-        targetExclude("**/build/**")
+        // Hidden directories (e.g. tool worktrees) are not part of the project.
+        targetExclude("**/build/**", "**/.*/**")
         ktlint(ktlintVersion).customRuleSets(
             listOf(
                 libs.compose.rules.ktlint
@@ -27,12 +28,12 @@ spotless {
     }
     kotlinGradle {
         target("**/*.gradle.kts")
-        targetExclude("**/build/**")
+        targetExclude("**/build/**", "**/.*/**")
         ktlint(ktlintVersion)
     }
     format("xml") {
         target("**/src/**/*.xml")
-        targetExclude("**/build/**")
+        targetExclude("**/build/**", "**/.*/**")
         trimTrailingWhitespace()
         endWithNewline()
     }
@@ -45,7 +46,7 @@ detekt {
     source.setFrom(
         fileTree(rootDir) {
             include("**/src/**/*.kt")
-            exclude("**/build/**")
+            exclude("**/build/**", "**/.*/**")
         },
     )
 }
