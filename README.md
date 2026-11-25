@@ -36,6 +36,10 @@ The design system so far (light, dark and pitch black):
   <img src="docs/images/design-system-amoled.webp" width="250" alt="Design system in the pitch black theme">
 </p>
 
+## Download
+
+Signed APKs are published on the [Releases](https://github.com/SilberGecko6917/APK-Manager/releases) page. Each release lists the APK's SHA-256 checksum and the signing certificate fingerprint, so you can verify the download.
+
 ## Requirements
 
 - Android 8.0 (API 26) or newer.
@@ -61,7 +65,7 @@ cd APK-Manager
 ./gradlew assembleDebug
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and [docs/RELEASING.md](docs/RELEASING.md) for releases.
 
 ## Contributing
 

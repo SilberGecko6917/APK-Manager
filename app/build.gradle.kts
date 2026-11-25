@@ -9,11 +9,29 @@ android {
 
     defaultConfig {
         applicationId = "me.geckotv.apkmanager"
-        versionCode = 1
-        versionName = "0.1.0-dev"
+        // The release workflow derives both from the Git tag (see docs/RELEASING.md).
+        versionCode = providers.gradleProperty("apkmanager.versionCode").map(String::toInt).getOrElse(1)
+        versionName = providers.gradleProperty("apkmanager.versionName").getOrElse("0.1.0-dev")
 
         val githubClientId = providers.gradleProperty("apkmanager.github.clientId").get()
         buildConfigField("String", "GITHUB_CLIENT_ID", "\"$githubClientId\"")
+    }
+
+    // Release signing is configured through environment variables, so the keystore and its
+    // passwords never live in the repository. Without them, release builds stay unsigned.
+    val releaseKeystore = providers.environmentVariable("APKMANAGER_KEYSTORE_FILE").orNull
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = providers.environmentVariable("APKMANAGER_KEYSTORE_PASSWORD").get()
+                keyAlias = providers.environmentVariable("APKMANAGER_KEY_ALIAS").get()
+                keyPassword = providers.environmentVariable("APKMANAGER_KEY_PASSWORD").get()
+                enableV1Signing = false
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
     }
 
     buildTypes {
@@ -22,6 +40,7 @@ android {
             versionNameSuffix = "-debug"
         }
         release {
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
