@@ -37,7 +37,7 @@ The first usable version: track GitHub apps and install updates manually.
   - Download with progress (public and private repos)
   - Verification: SHA-256 digest, package name, version code, signing certificate
   - Installation via `PackageInstaller` sessions
-- [ ] **Release pipeline** (`ci/release`)
+- [x] **Release pipeline** (`ci/release`, self-update follows with app tracking)
   - Signed release APK attached to GitHub Releases on `v*` tags
   - APK Manager can track its own repository to update itself
 
