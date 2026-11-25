@@ -10,6 +10,7 @@ dependencies {
     api(projects.core.auth)
     api(projects.core.data)
     api(projects.core.datastore)
+    api(projects.core.installer)
     api(projects.core.model)
     api(libs.junit4)
     api(libs.kotlinx.coroutines.test)
