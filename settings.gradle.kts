@@ -27,4 +27,10 @@ rootProject.name = "APK-Manager"
 
 include(":app")
 include(":core:common")
+include(":core:datastore")
 include(":core:designsystem")
+include(":core:model")
+include(":core:testing")
+include(":feature:apps")
+include(":feature:onboarding")
+include(":feature:settings")

@@ -6,62 +6,66 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import me.geckotv.apkmanager.core.designsystem.preview.ShowcaseThemeMode
-import me.geckotv.apkmanager.core.designsystem.preview.ShowcaseThemeSettings
 import me.geckotv.apkmanager.core.designsystem.theme.ApkManagerTheme
+import me.geckotv.apkmanager.core.model.ThemeMode
+import me.geckotv.apkmanager.core.model.UserSettings
 import me.geckotv.apkmanager.ui.ApkManagerApp
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private val viewModel: MainActivityViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        // Keep the splash screen until the settings are loaded, so the first frame has the right theme.
+        splashScreen.setKeepOnScreenCondition { viewModel.uiState.value is MainActivityUiState.Loading }
+
         setContent {
-            // Temporary in-memory theme settings; they move to persisted user settings later.
-            var themeMode by rememberSaveable { mutableStateOf(ShowcaseThemeMode.System) }
-            var dynamicColor by rememberSaveable { mutableStateOf(true) }
-            var amoledBlack by rememberSaveable { mutableStateOf(false) }
-            var hapticsEnabled by rememberSaveable { mutableStateOf(true) }
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            val settings = (uiState as? MainActivityUiState.Success)?.settings ?: return@setContent
 
-            val darkTheme =
-                when (themeMode) {
-                    ShowcaseThemeMode.System -> isSystemInDarkTheme()
-                    ShowcaseThemeMode.Light -> false
-                    ShowcaseThemeMode.Dark -> true
-                }
-
-            // Keep the system bar icons readable when the in-app theme differs from the system theme.
-            DisposableEffect(darkTheme) {
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
-                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
-                )
-                onDispose {}
-            }
+            val darkTheme = shouldUseDarkTheme(settings)
+            SystemBarsEffect(darkTheme)
 
             ApkManagerTheme(
                 darkTheme = darkTheme,
-                dynamicColor = dynamicColor,
-                amoledBlack = amoledBlack,
-                hapticsEnabled = hapticsEnabled,
+                dynamicColor = settings.useDynamicColor,
+                amoledBlack = settings.useAmoledBlack,
+                hapticsEnabled = settings.hapticsEnabled,
             ) {
-                ApkManagerApp(
-                    settings = ShowcaseThemeSettings(themeMode, dynamicColor, amoledBlack, hapticsEnabled),
-                    onSettingsChange = { settings ->
-                        themeMode = settings.themeMode
-                        dynamicColor = settings.dynamicColor
-                        amoledBlack = settings.amoledBlack
-                        hapticsEnabled = settings.hapticsEnabled
-                    },
-                )
+                ApkManagerApp(onboardingCompleted = settings.onboardingCompleted)
             }
         }
+    }
+}
+
+@Composable
+private fun shouldUseDarkTheme(settings: UserSettings): Boolean =
+    when (settings.themeMode) {
+        ThemeMode.System -> isSystemInDarkTheme()
+        ThemeMode.Light -> false
+        ThemeMode.Dark -> true
+    }
+
+/** Keeps the system bar icons readable when the in-app theme differs from the system theme. */
+@Composable
+private fun ComponentActivity.SystemBarsEffect(darkTheme: Boolean) {
+    DisposableEffect(darkTheme) {
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
+            navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
+        )
+        onDispose {}
     }
 }

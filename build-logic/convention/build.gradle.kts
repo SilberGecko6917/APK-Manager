@@ -63,6 +63,20 @@ gradlePlugin {
                     .pluginId
             implementationClass = "AndroidLibraryComposeConventionPlugin"
         }
+        register("androidFeature") {
+            id =
+                libs.plugins.apkmanager.android.feature
+                    .get()
+                    .pluginId
+            implementationClass = "AndroidFeatureConventionPlugin"
+        }
+        register("androidScreenshot") {
+            id =
+                libs.plugins.apkmanager.android.screenshot
+                    .get()
+                    .pluginId
+            implementationClass = "AndroidScreenshotConventionPlugin"
+        }
         register("hilt") {
             id =
                 libs.plugins.apkmanager.hilt

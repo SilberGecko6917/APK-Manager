@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_onboarding_title">Welcome to APK Manager</string>
+    <string name="feature_onboarding_description">Keep apps from GitHub releases up to date — including private repositories.</string>
+    <string name="feature_onboarding_permissions_title">Permissions</string>
+    <string name="feature_onboarding_install_title">Install apps</string>
+    <string name="feature_onboarding_install_description">Needed to install and update apps</string>
+    <string name="feature_onboarding_notifications_title">Notifications</string>
+    <string name="feature_onboarding_notifications_description">Get notified about new updates</string>
+    <string name="feature_onboarding_allow">Allow</string>
+    <string name="feature_onboarding_allowed">Allowed</string>
+    <string name="feature_onboarding_permissions_hint">You can change permissions later in the system settings.</string>
+    <string name="feature_onboarding_get_started">Get started</string>
+</resources>

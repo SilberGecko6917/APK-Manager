@@ -12,6 +12,10 @@ targetSdk = "37"
 androidxActivity = "1.13.0"
 androidxCore = "1.19.1"
 androidxLifecycle = "2.11.1"
+androidxNavigation3 = "1.2.2"
+androidxDatastore = "1.3.0"
+androidxSplashscreen = "1.2.0"
+androidxHilt = "1.4.0"
 composeBom = "2026.11.01"
 # DI
 hilt = "2.60.1"
@@ -19,10 +23,12 @@ hilt = "2.60.1"
 materialKolor = "5.0.1"
 # Kotlin
 kotlinxCoroutines = "1.11.0"
+kotlinxSerialization = "1.13.0"
 # Testing
 junit4 = "4.13.2"
 robolectric = "4.18.1"
 roborazzi = "1.79.0"
+turbine = "1.2.1"
 # Code quality
 spotless = "8.12.0"
 ktlint = "1.8.0"
@@ -33,6 +39,13 @@ composeRules = "0.6.8"
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "androidxLifecycle" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "androidxNavigation3" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "androidxNavigation3" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "androidxDatastore" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashscreen" }
+androidx-hilt-lifecycle-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "androidxHilt" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui" }
@@ -44,6 +57,8 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt"
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 junit4 = { module = "junit:junit", version.ref = "junit4" }
 materialkolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
@@ -67,6 +82,7 @@ android-library = { id = "com.android.library", version.ref = "androidGradlePlug
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
@@ -78,5 +94,7 @@ apkmanager-android-application = { id = "apkmanager.android.application" }
 apkmanager-android-application-compose = { id = "apkmanager.android.application.compose" }
 apkmanager-android-library = { id = "apkmanager.android.library" }
 apkmanager-android-library-compose = { id = "apkmanager.android.library.compose" }
+apkmanager-android-feature = { id = "apkmanager.android.feature" }
+apkmanager-android-screenshot = { id = "apkmanager.android.screenshot" }
 apkmanager-hilt = { id = "apkmanager.hilt" }
 apkmanager-jvm-library = { id = "apkmanager.jvm.library" }

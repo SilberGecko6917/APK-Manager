@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_apps_title">Apps</string>
+    <string name="feature_apps_empty_title">No apps yet</string>
+    <string name="feature_apps_empty_message">Apps you track from GitHub releases will show up here, together with their updates.</string>
+</resources>
