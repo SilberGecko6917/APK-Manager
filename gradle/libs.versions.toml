@@ -1,0 +1,70 @@
+[versions]
+# Build
+androidGradlePlugin = "9.5.2"
+kotlin = "2.4.21"
+ksp = "2.3.14"
+# SDK levels
+compileSdk = "37"
+compileSdkMinor = "2"
+minSdk = "26"
+targetSdk = "37"
+# AndroidX
+androidxActivity = "1.13.0"
+androidxCore = "1.19.1"
+androidxLifecycle = "2.11.1"
+composeBom = "2026.11.01"
+# DI
+hilt = "2.60.1"
+# Kotlin
+kotlinxCoroutines = "1.11.0"
+# Testing
+junit4 = "4.13.2"
+# Code quality
+spotless = "8.12.0"
+ktlint = "1.8.0"
+detekt = "1.23.8"
+composeRules = "0.6.8"
+
+[libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+# Code quality (used as coordinates, not as project dependencies)
+compose-rules-detekt = { module = "io.nlopez.compose.rules:detekt", version.ref = "composeRules" }
+compose-rules-ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "composeRules" }
+
+# Gradle plugins used by build-logic
+android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "androidGradlePlugin" }
+kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+compose-gradlePlugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
+ksp-gradlePlugin = { module = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
+hilt-gradlePlugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hilt" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+
+# Convention plugins (defined in build-logic)
+apkmanager-android-application = { id = "apkmanager.android.application" }
+apkmanager-android-application-compose = { id = "apkmanager.android.application.compose" }
+apkmanager-android-library = { id = "apkmanager.android.library" }
+apkmanager-android-library-compose = { id = "apkmanager.android.library.compose" }
+apkmanager-hilt = { id = "apkmanager.hilt" }
+apkmanager-jvm-library = { id = "apkmanager.jvm.library" }
