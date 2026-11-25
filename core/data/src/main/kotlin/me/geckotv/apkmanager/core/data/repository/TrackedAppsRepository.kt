@@ -7,8 +7,10 @@ import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
 import me.geckotv.apkmanager.core.model.TrackedApp
 
-/** The apps the user tracks and their releases. */
-// One function per operation on tracked apps; splitting it would only scatter them.
+/**
+ * The apps the user tracks and their releases. It has one function per operation on tracked apps;
+ * splitting it would only scatter them.
+ */
 @Suppress("TooManyFunctions")
 interface TrackedAppsRepository {
     /** All tracked apps with their latest release and installed version. Updates on package changes. */

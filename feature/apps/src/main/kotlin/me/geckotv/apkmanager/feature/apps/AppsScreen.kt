@@ -31,10 +31,13 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,7 +52,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -155,8 +160,9 @@ private fun MessagesEffect(
 }
 
 /**
- * Launches the system dialog that confirms an install once the app is in the foreground, and
- * reports it so it is launched only once.
+ * Launches the system dialog that confirms an install while the app is in the foreground, and
+ * reports it so it is launched only once. If several apps wait, the next dialog follows only after
+ * the user is back in the app, so dialogs never stack.
  */
 @Composable
 private fun ConfirmationLaunchEffect(
@@ -167,14 +173,19 @@ private fun ConfirmationLaunchEffect(
     val context = LocalContext.current
     val currentOnShow by rememberUpdatedState(onShow)
     val currentOnFail by rememberUpdatedState(onFail)
-    LifecycleResumeEffect(confirmation) {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val lifecycleState by lifecycle.currentStateFlow.collectAsState()
+    var launchedSinceResume by remember { mutableStateOf(false) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { launchedSinceResume = false }
+    LaunchedEffect(confirmation, lifecycleState, launchedSinceResume) {
+        if (launchedSinceResume || !lifecycleState.isAtLeast(Lifecycle.State.RESUMED)) return@LaunchedEffect
+        launchedSinceResume = true
         try {
             context.startActivity(confirmation.intent)
             currentOnShow(confirmation.appId)
         } catch (_: ActivityNotFoundException) {
             currentOnFail(confirmation.appId)
         }
-        onPauseOrDispose {}
     }
 }
 
