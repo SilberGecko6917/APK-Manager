@@ -17,8 +17,6 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 lint {
                     abortOnError = true
                     checkDependencies = true
-                    xmlReport = false
-                    sarifReport = true
                 }
             }
         }

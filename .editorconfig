@@ -14,6 +14,8 @@ ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
 ktlint_code_style = ktlint_official
 ktlint_function_naming_ignore_when_annotated_with = Composable
+# Compose rules (io.nlopez.compose.rules)
+compose_allowed_composition_locals = LocalSectionItemShapes
 
 [*.{yml,yaml,json,toml}]
 indent_size = 2

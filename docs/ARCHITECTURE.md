@@ -17,7 +17,7 @@ This document describes the technical design of APK Manager. It is updated as th
 |---|---|
 | Language / build | Kotlin, Gradle (Kotlin DSL) with version catalog and convention plugins, JDK 21 |
 | SDK levels | `minSdk` 26, `targetSdk` 37, `compileSdk` 37.2 |
-| UI | Jetpack Compose, Material 3 (Expressive components), Material Symbols icons |
+| UI | Jetpack Compose, Material 3 (Expressive components), Material Symbols icons, materialKolor (seed color schemes) |
 | Navigation | Navigation 3 |
 | Dependency injection | Hilt |
 | Persistence | Room (tracked apps, releases), DataStore (settings, encrypted token) |
@@ -25,7 +25,7 @@ This document describes the technical design of APK Manager. It is updated as th
 | Background work | WorkManager |
 | Images | Coil |
 | Privileged installs | Shizuku API (optional) |
-| Quality | Spotless (ktlint), Detekt, Android Lint, JUnit, Turbine, MockWebServer |
+| Quality | Spotless (ktlint), Detekt, Android Lint, JUnit, Turbine, MockWebServer, Roborazzi + Robolectric (screenshot tests) |
 
 Exact versions live in `gradle/libs.versions.toml`.
 
@@ -163,10 +163,21 @@ Google is rolling out developer verification for apps installed outside Google P
 
 ## Design
 
-The visual language follows Material 3 Expressive and is inspired by [Essentials](https://github.com/sameerasw/essentials):
+The visual language follows Material 3 Expressive and is inspired by [Essentials](https://github.com/sameerasw/essentials).
+Everything lives in `:core:designsystem`:
 
-- Dynamic color (Material You), optional custom seed color, light / dark / AMOLED black.
-- Lists are grouped into rounded sections: 24 dp radius on the outer corners, 4 dp on inner corners, 2 dp gaps between items.
-- Large flexible top app bars, a floating toolbar for top-level navigation, bottom sheets instead of dialogs.
-- Expressive components such as button groups, wavy progress indicators and loading indicators.
-- Haptic feedback, which can be turned off.
+| Piece | Implementation |
+|---|---|
+| Theme | `ApkManagerTheme`: dynamic color (Material You) on Android 12+, otherwise a scheme generated from a seed color (materialKolor, selectable `ColorStyle`), light / dark / pitch black, expressive motion scheme |
+| Typography | Google Sans Flex with fully rounded terminals (`ROND` axis), subset to Latin scripts |
+| Shapes | Slightly larger radii than the Material defaults (12 / 16 / 20 / 28 dp) |
+| Grouped lists | `Section` / `LazyListScope.section` built on Material's `SegmentedListItem`: large outer corners, small inner corners, small gaps. `SectionItem`, `SwitchSectionItem`, `SectionItemIcon`, `SectionHeader` |
+| Navigation | `NavigationToolbar`: a floating toolbar whose selected destination expands to show its label, with an optional FAB |
+| Top app bar | `ApkManagerTopAppBar`: large flexible top app bar with optional subtitle, collapses on scroll |
+| Choices | `SingleChoiceButtonGroup`: connected button group, the selected button morphs into a pill |
+| Sheets | `ApkManagerBottomSheet`: modal bottom sheets instead of dialogs |
+| Icons | `ApkManagerIcons`: Material Symbols Rounded vector drawables, filled variants for selected states |
+| Haptics | Components perform haptic feedback through `LocalHapticFeedback`; `ApkManagerTheme(hapticsEnabled = false)` turns it off everywhere |
+
+`DesignSystemShowcase` combines all components on one screen. It is used for previews and screenshot tests
+(`./gradlew :core:designsystem:recordRoborazziDebug`, output in `core/designsystem/build/outputs/roborazzi/`).
