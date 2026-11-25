@@ -30,6 +30,27 @@ enum class UpdateStatus {
         fun of(
             installedApp: InstalledApp?,
             latestRelease: Release?,
-        ): UpdateStatus = TODO("Implemented by the version comparison change")
+        ): UpdateStatus {
+            val installedName = installedApp?.versionName
+            val installed = installedName?.let(Version::parse)
+            val latest = latestRelease?.let { Version.parse(it.tagName) }
+            return when {
+                installedApp == null -> NotInstalled
+                latestRelease == null -> NoRelease
+                installed != null && latest != null -> if (latest > installed) UpdateAvailable else UpToDate
+                installedName != null && normalize(installedName) == normalize(latestRelease.tagName) -> UpToDate
+                else -> Unknown
+            }
+        }
+
+        private val LEADING_V = Regex("^v(?=[^a-z])")
+        private val SEPARATORS = Regex("[-_. ]")
+
+        private fun normalize(text: String): String =
+            text
+                .trim()
+                .lowercase()
+                .replace(LEADING_V, "")
+                .replace(SEPARATORS, "")
     }
 }
