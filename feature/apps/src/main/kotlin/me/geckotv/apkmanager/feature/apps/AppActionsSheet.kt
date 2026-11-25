@@ -11,6 +11,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,6 +33,7 @@ import me.geckotv.apkmanager.core.designsystem.component.SectionItem
 import me.geckotv.apkmanager.core.designsystem.component.SectionItemIcon
 import me.geckotv.apkmanager.core.designsystem.component.SwitchSectionItem
 import me.geckotv.apkmanager.core.designsystem.icon.ApkManagerIcons
+import me.geckotv.apkmanager.core.installer.InstallState
 import me.geckotv.apkmanager.core.model.TrackedApp
 
 /** Bottom sheet with the actions for one tracked app, and the list of installed apps to link. */
@@ -44,6 +46,8 @@ internal fun AppActionsSheet(
     onPackageSelect: (String?) -> Unit,
     onPickerBack: () -> Unit,
     onRemoveConfirm: () -> Unit,
+    onInstallClick: () -> Unit,
+    onInstallCancelClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
@@ -76,7 +80,9 @@ internal fun AppActionsSheet(
 
             else -> {
                 AppActionsContent(
-                    app = app,
+                    item = state.item,
+                    onInstallClick = onInstallClick,
+                    onInstallCancelClick = onInstallCancelClick,
                     onOpenRepositoryClick = { uriHandler.openUri(app.repository.htmlUrl) },
                     onReleaseNotesClick = { app.latestRelease?.let { uriHandler.openUri(it.htmlUrl) } },
                     onIncludePrereleasesChange = onIncludePrereleasesChange,
@@ -88,26 +94,41 @@ internal fun AppActionsSheet(
     }
 }
 
-/** The header and the actions of a tracked app. */
+/**
+ * The header and the actions of a tracked app.
+ *
+ * @param showProgressIndicator whether to show indicators of unknown progress; they animate forever,
+ * which screenshot tests cannot wait for.
+ */
 @Composable
 internal fun AppActionsContent(
-    app: TrackedApp,
+    item: AppItem,
+    onInstallClick: () -> Unit,
+    onInstallCancelClick: () -> Unit,
     onOpenRepositoryClick: () -> Unit,
     onReleaseNotesClick: () -> Unit,
     onIncludePrereleasesChange: (Boolean) -> Unit,
     onInstalledAppClick: () -> Unit,
     onRemoveClick: () -> Unit,
     modifier: Modifier = Modifier,
+    showProgressIndicator: Boolean = true,
 ) {
+    val app = item.app
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         AppActionsHeader(app = app)
+        InstallActions(
+            item = item,
+            onInstallClick = onInstallClick,
+            onCancelClick = onInstallCancelClick,
+            showProgressIndicator = showProgressIndicator,
+            modifier = Modifier.padding(top = 8.dp),
+        )
         AppActionsSection(
             app = app,
             onOpenRepositoryClick = onOpenRepositoryClick,
             onReleaseNotesClick = onReleaseNotesClick,
             onIncludePrereleasesChange = onIncludePrereleasesChange,
             onInstalledAppClick = onInstalledAppClick,
-            modifier = Modifier.padding(top = 8.dp),
         )
         FilledTonalButton(
             onClick = onRemoveClick,
@@ -124,6 +145,68 @@ internal fun AppActionsContent(
                 modifier = Modifier.size(18.dp),
             )
             Text(text = stringResource(R.string.feature_apps_actions_remove), modifier = Modifier.padding(start = 8.dp))
+        }
+    }
+}
+
+/** The button to install or update the app, or the progress of the install that is running. */
+@Composable
+private fun InstallActions(
+    item: AppItem,
+    onInstallClick: () -> Unit,
+    onCancelClick: () -> Unit,
+    showProgressIndicator: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val install = item.install
+    val tag = item.app.latestRelease?.tagName
+    val installAction = item.installAction
+    if (install != null) {
+        InstallProgress(
+            state = install,
+            onCancelClick = onCancelClick,
+            showProgressIndicator = showProgressIndicator,
+            modifier = modifier,
+        )
+    } else if (installAction != null && tag != null) {
+        val label =
+            when (installAction) {
+                InstallAction.Install -> stringResource(R.string.feature_apps_actions_install, tag)
+                InstallAction.Update -> stringResource(R.string.feature_apps_actions_update, tag)
+            }
+        Button(onClick = onInstallClick, modifier = modifier.fillMaxWidth()) {
+            Icon(
+                painter = painterResource(ApkManagerIcons.Download),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(text = label, modifier = Modifier.padding(start = 8.dp))
+        }
+    }
+}
+
+@Composable
+private fun InstallProgress(
+    state: InstallState,
+    onCancelClick: () -> Unit,
+    showProgressIndicator: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val progress = (state as? InstallState.Downloading)?.progress
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+        if (progress != null) {
+            LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
+        } else if (showProgressIndicator) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = state.progressText(),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = onCancelClick) { Text(stringResource(R.string.feature_apps_actions_cancel)) }
         }
     }
 }

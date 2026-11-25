@@ -1,5 +1,6 @@
 package me.geckotv.apkmanager.feature.apps
 
+import android.content.Intent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -7,9 +8,13 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import me.geckotv.apkmanager.core.data.repository.UpdateCheckResult
+import me.geckotv.apkmanager.core.installer.InstallFailure
+import me.geckotv.apkmanager.core.installer.InstallState
 import me.geckotv.apkmanager.core.model.GitHubRepository
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.TrackedApp
+import me.geckotv.apkmanager.core.testing.FakeAppInstaller
+import me.geckotv.apkmanager.core.testing.FakeDeviceInfo
 import me.geckotv.apkmanager.core.testing.FakeInstalledAppsRepository
 import me.geckotv.apkmanager.core.testing.FakeTrackedAppsRepository
 import me.geckotv.apkmanager.core.testing.MainDispatcherRule
@@ -22,8 +27,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import java.time.Instant
 
+// Robolectric provides the android.content.Intent that install confirmations carry.
+@RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppsViewModelTest {
     @get:Rule
@@ -31,12 +40,14 @@ class AppsViewModelTest {
 
     private val trackedApps = FakeTrackedAppsRepository()
     private val installedApps = FakeInstalledAppsRepository()
+    private val installer = FakeAppInstaller()
+    private val deviceInfo = FakeDeviceInfo()
     private lateinit var viewModel: AppsViewModel
 
     // Created after MainDispatcherRule has replaced Dispatchers.Main, so viewModelScope uses the test dispatcher.
     @Before
     fun setUp() {
-        viewModel = AppsViewModel(trackedApps, installedApps)
+        viewModel = AppsViewModel(trackedApps, installedApps, installer, deviceInfo)
     }
 
     @Test
@@ -60,9 +71,9 @@ class AppsViewModelTest {
                 listOf(AppGroupKind.UpdatesAvailable, AppGroupKind.UpToDate, AppGroupKind.NotInstalled),
                 groups.map { it.kind },
             )
-            assertEquals(listOf("alpha", "Zeta"), groups[0].apps.map { it.displayName })
-            assertEquals(listOf("Beta", "gamma", "Nightly", "Quiet"), groups[1].apps.map { it.displayName })
-            assertEquals(listOf("Delta"), groups[2].apps.map { it.displayName })
+            assertEquals(listOf("alpha", "Zeta"), groups[0].items.map { it.app.displayName })
+            assertEquals(listOf("Beta", "gamma", "Nightly", "Quiet"), groups[1].items.map { it.app.displayName })
+            assertEquals(listOf("Delta"), groups[2].items.map { it.app.displayName })
         }
 
     @Test
@@ -72,9 +83,9 @@ class AppsViewModelTest {
 
             trackedApps.setApps(sampleApps())
 
-            val upToDate = ready().groups.first { it.kind == AppGroupKind.UpToDate }.apps
-            assertTrue(upToDate.any { it.displayName == "Nightly" })
-            assertTrue(upToDate.any { it.displayName == "Quiet" })
+            val upToDate = ready().groups.first { it.kind == AppGroupKind.UpToDate }.items
+            assertTrue(upToDate.any { it.app.displayName == "Nightly" })
+            assertTrue(upToDate.any { it.app.displayName == "Quiet" })
         }
 
     @Test
@@ -92,7 +103,7 @@ class AppsViewModelTest {
         runTest {
             trackedApps.setApps(sampleApps())
 
-            AppsViewModel(trackedApps, installedApps)
+            AppsViewModel(trackedApps, installedApps, installer, deviceInfo)
 
             assertEquals(1, trackedApps.updateCheckCount)
         }
@@ -233,6 +244,230 @@ class AppsViewModelTest {
             assertFalse(trackedApps.trackedApps.any { it.id == 1L })
         }
 
+    @Test
+    fun installsTheLatestReleaseOfTheApp() =
+        runTest {
+            trackedApps.setApps(sampleApps())
+
+            viewModel.install(7)
+
+            assertEquals(listOf(7L), installer.installedApps.map { it.id })
+            assertEquals(
+                "v1.0.0",
+                installer.installedApps
+                    .single()
+                    .latestRelease
+                    ?.tagName,
+            )
+        }
+
+    @Test
+    fun installingAnUnknownAppDoesNothing() =
+        runTest {
+            trackedApps.setApps(sampleApps())
+
+            viewModel.install(99)
+
+            assertEquals(emptyList<TrackedApp>(), installer.installedApps)
+        }
+
+    @Test
+    fun installStateAppearsOnTheItem() =
+        runTest {
+            collectUiState()
+            trackedApps.setApps(sampleApps())
+
+            viewModel.install(1)
+
+            assertEquals(InstallState.Downloading(bytesRead = 0, totalBytes = null), item(1).install)
+            assertNull(item(2).install)
+        }
+
+    @Test
+    fun itemsOfferTheMatchingInstallAction() =
+        runTest {
+            collectUiState()
+            trackedApps.setApps(sampleApps())
+
+            assertEquals(InstallAction.Update, item(1).installAction)
+            assertEquals(InstallAction.Install, item(7).installAction)
+            assertNull(item(3).installAction)
+
+            viewModel.install(1)
+            assertNull(item(1).installAction)
+        }
+
+    @Test
+    fun notInstalledAppsWithoutApkForThisDeviceCannotBeInstalled() =
+        runTest {
+            collectUiState()
+            val release = TestData.release(7, "v1.0.0", assets = listOf(TestData.asset(70, "app-x86_64.apk")))
+            trackedApps.setApps(
+                listOf(
+                    TestData.trackedApp(
+                        id = 7,
+                        repository = GitHubRepository("octo", "Delta"),
+                        latestRelease = release,
+                    ),
+                ),
+            )
+
+            assertFalse(item(7).hasCompatibleApk)
+            assertNull(item(7).installAction)
+        }
+
+    @Test
+    fun updatesFinishWithAMessageAndAreDismissed() =
+        runTest {
+            val messages = collectMessages()
+            trackedApps.setApps(sampleApps())
+            viewModel.install(1)
+
+            installer.setState(1, InstallState.Succeeded(versionName = "1.1.0"))
+
+            assertEquals(listOf<AppsMessage>(AppsMessage.Updated("alpha", "1.1.0")), messages)
+            assertEquals(emptyMap<Long, InstallState>(), installer.installs.value)
+        }
+
+    @Test
+    fun firstInstallsFinishWithAnInstalledMessage() =
+        runTest {
+            val messages = collectMessages()
+            trackedApps.setApps(sampleApps())
+            viewModel.install(7)
+
+            installer.setState(7, InstallState.Succeeded(versionName = "1.0.0"))
+
+            assertEquals(listOf<AppsMessage>(AppsMessage.Installed("Delta")), messages)
+            assertEquals(emptyMap<Long, InstallState>(), installer.installs.value)
+        }
+
+    @Test
+    fun failedInstallsShowTheFailureAndTheReleaseAndAreDismissed() =
+        runTest {
+            val messages = collectMessages()
+            trackedApps.setApps(sampleApps())
+            viewModel.install(1)
+
+            installer.setState(1, InstallState.Failed(InstallFailure.NoCompatibleApk))
+
+            assertEquals(
+                listOf<AppsMessage>(AppsMessage.InstallFailed(InstallFailure.NoCompatibleApk, "v1.1.0")),
+                messages,
+            )
+            assertEquals(emptyMap<Long, InstallState>(), installer.installs.value)
+        }
+
+    @Test
+    fun cancelledInstallsAreDismissedSilently() =
+        runTest {
+            val messages = collectMessages()
+            trackedApps.setApps(sampleApps())
+            viewModel.install(1)
+
+            installer.setState(1, InstallState.Failed(InstallFailure.Cancelled))
+
+            assertEquals(emptyList<AppsMessage>(), messages)
+            assertEquals(emptyMap<Long, InstallState>(), installer.installs.value)
+        }
+
+    @Test
+    fun updateAllInstallsOnlyUpdatesThatAreNotRunning() =
+        runTest {
+            trackedApps.setApps(sampleApps())
+            viewModel.install(1)
+
+            viewModel.updateAll()
+
+            // alpha is already installing; Zeta is the only other app with an update.
+            assertEquals(listOf(1L, 2L), installer.installedApps.map { it.id })
+        }
+
+    @Test
+    fun updateAllLeavesOtherAppsAlone() =
+        runTest {
+            trackedApps.setApps(sampleApps())
+
+            viewModel.updateAll()
+
+            assertEquals(listOf(1L, 2L), installer.installedApps.map { it.id }.sorted())
+        }
+
+    @Test
+    fun updateAllIsOfferedForSeveralUpdatesThatAreNotAllRunning() =
+        runTest {
+            collectUiState()
+            trackedApps.setApps(sampleApps())
+            val updates = { ready().groups.first { it.kind == AppGroupKind.UpdatesAvailable } }
+            assertTrue(updates().canUpdateAll)
+            assertFalse(ready().groups.first { it.kind == AppGroupKind.UpToDate }.canUpdateAll)
+
+            viewModel.install(1)
+            assertTrue(updates().canUpdateAll)
+
+            viewModel.install(2)
+            assertFalse(updates().canUpdateAll)
+        }
+
+    @Test
+    fun cancelInstallStopsTheInstall() =
+        runTest {
+            collectUiState()
+            trackedApps.setApps(sampleApps())
+            viewModel.install(1)
+
+            viewModel.cancelInstall(1)
+
+            assertNull(item(1).install)
+        }
+
+    @Test
+    fun confirmationShownIsForwardedToTheInstaller() =
+        runTest {
+            collectUiState()
+            trackedApps.setApps(sampleApps())
+            installer.stateAfterInstall = InstallState.WaitingForUser(Intent("confirm"))
+            viewModel.install(1)
+            assertEquals(1L, ready().pendingConfirmation?.appId)
+
+            viewModel.onConfirmationShown(1)
+
+            assertEquals(listOf(1L), installer.confirmationsShown)
+            assertEquals(InstallState.Installing, item(1).install)
+            assertNull(ready().pendingConfirmation)
+        }
+
+    @Test
+    fun failedConfirmationCancelsTheInstallWithAMessage() =
+        runTest {
+            val messages = collectMessages()
+            collectUiState()
+            trackedApps.setApps(sampleApps())
+            installer.stateAfterInstall = InstallState.WaitingForUser(Intent("confirm"))
+            viewModel.install(1)
+
+            viewModel.onConfirmationFailed(1)
+
+            assertNull(item(1).install)
+            assertEquals(
+                listOf<AppsMessage>(AppsMessage.InstallFailed(InstallFailure.SystemError(null), null)),
+                messages,
+            )
+        }
+
+    @Test
+    fun actionsShowTheInstallOfTheSelectedApp() =
+        runTest {
+            collectUiState()
+            trackedApps.setApps(sampleApps())
+            viewModel.selectApp(1)
+            assertEquals(InstallAction.Update, ready().actions?.item?.installAction)
+
+            viewModel.install(1)
+
+            assertTrue(ready().actions?.item?.install is InstallState.Downloading)
+        }
+
     private fun TestScope.collectUiState() {
         // uiState only collects its upstream while it has a subscriber.
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect() }
@@ -247,6 +482,8 @@ class AppsViewModelTest {
     }
 
     private fun ready(): AppsUiState.Ready = viewModel.uiState.value as AppsUiState.Ready
+
+    private fun item(id: Long): AppItem = ready().groups.flatMap { it.items }.first { it.id == id }
 
     /** Two apps with updates, four up to date (one unknown, one without release) and one not installed. */
     private fun sampleApps(): List<TrackedApp> =

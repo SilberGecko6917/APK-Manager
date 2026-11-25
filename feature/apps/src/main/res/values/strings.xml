@@ -34,6 +34,38 @@
     <string name="feature_apps_message_offline">No connection</string>
     <string name="feature_apps_message_unauthorized">Your GitHub sign-in expired. Sign in again in Settings.</string>
     <string name="feature_apps_message_added">Added %1$s</string>
+    <string name="feature_apps_message_installed">%1$s installed</string>
+    <string name="feature_apps_message_updated">%1$s updated to %2$s</string>
+    <string name="feature_apps_message_updated_unknown_version">%1$s updated</string>
+    <string name="feature_apps_message_permission_missing">Allow APK Manager to install apps</string>
+    <string name="feature_apps_message_permission_allow">Allow</string>
+    <string name="feature_apps_message_no_apk">No APK for this device in %1$s</string>
+    <string name="feature_apps_message_no_apk_latest">No APK for this device in the latest release</string>
+    <string name="feature_apps_message_download_not_found">Download not found. Private repositories need a GitHub sign-in with private access.</string>
+    <string name="feature_apps_message_download_failed">The download failed. Try again.</string>
+    <string name="feature_apps_message_checksum_mismatch">The download is damaged (checksum mismatch). Try again.</string>
+    <string name="feature_apps_message_invalid_apk">The download is not a valid APK.</string>
+    <!-- Package name of the installed app and of the downloaded APK -->
+    <string name="feature_apps_message_package_mismatch">The APK is a different app (%2$s) than the installed one (%1$s). It was not installed.</string>
+    <string name="feature_apps_message_signature_mismatch">The APK is signed by a different developer than the installed app, so Android cannot update it. Uninstall the app first if you trust the new source.</string>
+    <string name="feature_apps_message_downgrade">The APK is older than the installed version.</string>
+    <string name="feature_apps_message_storage">Not enough storage.</string>
+    <string name="feature_apps_message_developer_verification_offline">Android needs a connection to verify the developer of this app.</string>
+    <string name="feature_apps_message_developer_verification_failed">Android blocked this app because its developer is not verified. You can allow it in the system settings (advanced flow).</string>
+    <string name="feature_apps_message_install_failed">Installation failed</string>
+    <string name="feature_apps_message_install_failed_with">Installation failed: %1$s</string>
+
+    <!-- Install and update -->
+    <string name="feature_apps_install">Install</string>
+    <string name="feature_apps_update">Update</string>
+    <string name="feature_apps_update_all">Update all</string>
+    <!-- Download progress in percent, e.g. "Downloading 45 %" -->
+    <string name="feature_apps_install_downloading_percent">Downloading %1$d %%</string>
+    <!-- Downloaded size if the total is unknown, e.g. "Downloading 3.1 MB" -->
+    <string name="feature_apps_install_downloading_size">Downloading %1$s</string>
+    <string name="feature_apps_install_verifying">Verifying…</string>
+    <string name="feature_apps_install_installing">Installing…</string>
+    <string name="feature_apps_install_waiting">Waiting for confirmation</string>
 
     <!-- Add app sheet -->
     <string name="feature_apps_add_title">Add app</string>
@@ -83,6 +115,8 @@
     <string name="feature_apps_picker_empty">No matching apps</string>
 
     <!-- App actions sheet -->
+    <string name="feature_apps_actions_install">Install %1$s</string>
+    <string name="feature_apps_actions_update">Update to %1$s</string>
     <string name="feature_apps_actions_installed_version">Installed %1$s</string>
     <string name="feature_apps_actions_latest_release">Latest %1$s</string>
     <string name="feature_apps_actions_not_installed">Not installed</string>

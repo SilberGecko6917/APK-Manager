@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import me.geckotv.apkmanager.core.designsystem.theme.ApkManagerTheme
+import me.geckotv.apkmanager.core.installer.InstallState
 import me.geckotv.apkmanager.core.model.GitHubRepository
 import me.geckotv.apkmanager.core.model.InstalledApp
 import me.geckotv.apkmanager.core.model.SourceError
@@ -34,10 +35,10 @@ class AppsScreenScreenshotTest {
     fun appsEmptyDark() = capture("apps_empty_dark", darkTheme = true) { AppsScreenFor(emptyList()) }
 
     @Test
-    fun appsListLight() = capture("apps_list_light", darkTheme = false) { AppsScreenFor(sampleApps()) }
+    fun appsListLight() = capture("apps_list_light", darkTheme = false) { AppsScreenFor(sampleApps().map { item(it) }) }
 
     @Test
-    fun appsListDark() = capture("apps_list_dark", darkTheme = true) { AppsScreenFor(sampleApps()) }
+    fun appsListDark() = capture("apps_list_dark", darkTheme = true) { AppsScreenFor(sampleApps().map { item(it) }) }
 
     @Test
     fun addAppInputLight() =
@@ -95,10 +96,48 @@ class AppsScreenScreenshotTest {
         }
 
     @Test
+    fun appsListInstallingLight() =
+        capture("apps_list_installing_light", darkTheme = false) { AppsScreenFor(installingApps()) }
+
+    @Test
+    fun appsListInstallingDark() =
+        capture("apps_list_installing_dark", darkTheme = true) { AppsScreenFor(installingApps()) }
+
+    @Test
+    fun appsListVerifyingLight() =
+        capture("apps_list_verifying_light", darkTheme = false) {
+            AppsScreenFor(listOf(item(app(1, "Octo App", "1.1.0", "v1.2.0"), InstallState.Verifying)))
+        }
+
+    @Test
     fun appActionsLight() = capture("app_actions_light", darkTheme = false) { Sheet { AppActions() } }
 
     @Test
     fun appActionsDark() = capture("app_actions_dark", darkTheme = true) { Sheet { AppActions() } }
+
+    @Test
+    fun appActionsInstallLight() =
+        capture("app_actions_install_light", darkTheme = false) {
+            Sheet { AppActions(item(app(5, "Camera", null, "v2.0.0"))) }
+        }
+
+    @Test
+    fun appActionsDownloadingLight() =
+        capture("app_actions_downloading_light", darkTheme = false) {
+            Sheet { AppActions(item(sampleApps().first(), InstallState.Downloading(4_800_000, 12_000_000))) }
+        }
+
+    @Test
+    fun appActionsDownloadingDark() =
+        capture("app_actions_downloading_dark", darkTheme = true) {
+            Sheet { AppActions(item(sampleApps().first(), InstallState.Downloading(4_800_000, 12_000_000))) }
+        }
+
+    @Test
+    fun appActionsInstallingLight() =
+        capture("app_actions_installing_light", darkTheme = false) {
+            Sheet { AppActions(item(sampleApps().first(), InstallState.Installing)) }
+        }
 
     private fun capture(
         name: String,
@@ -111,13 +150,16 @@ class AppsScreenScreenshotTest {
     }
 
     @Composable
-    private fun AppsScreenFor(apps: List<TrackedApp>) {
+    private fun AppsScreenFor(items: List<AppItem>) {
         AppsScreen(
-            uiState = AppsUiState.Ready(groups = groupApps(apps), isRefreshing = false, actions = null),
+            uiState = AppsUiState.Ready(groups = groupApps(items), isRefreshing = false, actions = null),
             snackbarHostState = SnackbarHostState(),
             onRefresh = {},
             onAppClick = {},
+            onInstallClick = {},
+            onUpdateAllClick = {},
             onAddAppClick = {},
+            showProgressIndicator = false,
         )
     }
 
@@ -147,9 +189,12 @@ class AppsScreenScreenshotTest {
     }
 
     @Composable
-    private fun AppActions() {
+    private fun AppActions(item: AppItem = item(sampleApps().first())) {
         AppActionsContent(
-            app = sampleApps().first(),
+            item = item,
+            onInstallClick = {},
+            onInstallCancelClick = {},
+            showProgressIndicator = false,
             onOpenRepositoryClick = {},
             onReleaseNotesClick = {},
             onIncludePrereleasesChange = {},
@@ -192,6 +237,23 @@ class AppsScreenScreenshotTest {
             TestData.installedApp("org.example.player", "Player", "0.9.1"),
             TestData.installedApp("com.android.settings", "Settings", "16", isSystemApp = true),
         )
+
+    /** An update that is downloading (40 %), one that can be started, and one app to install. */
+    private fun installingApps(): List<AppItem> =
+        listOf(
+            item(app(1, "Octo App", "1.1.0", "v1.2.0")),
+            item(
+                app(2, "Notes", "4.2", "v4.3.0"),
+                InstallState.Downloading(bytesRead = 4_000_000, totalBytes = 10_000_000),
+            ),
+            item(app(3, "Player", "0.9.1", "v0.9.1")),
+            item(app(5, "Camera", null, "v2.0.0")),
+        )
+
+    private fun item(
+        app: TrackedApp,
+        install: InstallState? = null,
+    ) = AppItem(app = app, install = install, hasCompatibleApk = true)
 
     /** Updates for two apps, three up to date (one unknown), and one not installed, the latter two with labels. */
     private fun sampleApps(): List<TrackedApp> =
