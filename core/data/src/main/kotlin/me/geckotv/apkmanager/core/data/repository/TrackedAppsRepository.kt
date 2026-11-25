@@ -7,7 +7,11 @@ import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
 import me.geckotv.apkmanager.core.model.TrackedApp
 
-/** The apps the user tracks and their releases. */
+/**
+ * The apps the user tracks and their releases. It has one function per operation on tracked apps;
+ * splitting it would only scatter them.
+ */
+@Suppress("TooManyFunctions")
 interface TrackedAppsRepository {
     /** All tracked apps with their latest release and installed version. Updates on package changes. */
     fun observeTrackedApps(): Flow<List<TrackedApp>>
@@ -28,6 +32,17 @@ interface TrackedAppsRepository {
     suspend fun addApp(
         preview: RepositoryPreview,
         options: AddAppOptions,
+    ): Long
+
+    /**
+     * Starts tracking [repository] without looking it up first; its latest release is fetched by the
+     * next update check. Returns the app's ID, or the existing app's ID if it is tracked already.
+     */
+    suspend fun trackRepository(
+        repository: GitHubRepository,
+        packageName: String,
+        displayName: String,
+        includePrereleases: Boolean,
     ): Long
 
     suspend fun removeApp(id: Long)

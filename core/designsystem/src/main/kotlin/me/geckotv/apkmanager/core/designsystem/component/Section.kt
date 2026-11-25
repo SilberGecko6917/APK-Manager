@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
@@ -84,17 +85,18 @@ fun Section(
 }
 
 /**
- * Lazy variant of [Section]: adds an optional [title] and one segmented item per element of
- * [items] to a `LazyColumn`.
+ * Lazy variant of [Section]: adds an optional [title], with an optional [headerAction] at its end,
+ * and one segmented item per element of [items] to a `LazyColumn`.
  */
 fun <T> LazyListScope.section(
     items: List<T>,
     title: String? = null,
     key: ((T) -> Any)? = null,
+    headerAction: (@Composable () -> Unit)? = null,
     itemContent: @Composable (T) -> Unit,
 ) {
     if (title != null) {
-        item(contentType = "SectionHeader") { SectionHeader(text = title) }
+        item(contentType = "SectionHeader") { SectionHeader(text = title, action = headerAction) }
     }
     itemsIndexed(
         items = items,
@@ -111,21 +113,37 @@ fun <T> LazyListScope.section(
     }
 }
 
-/** Title above a [Section]. */
+/** Title above a [Section], with an optional [action] at its end, e.g. a `TextButton`. */
 @Composable
 fun SectionHeader(
     text: String,
     modifier: Modifier = Modifier,
+    action: (@Composable () -> Unit)? = null,
 ) {
-    Text(
-        text = text,
-        modifier =
-            modifier
-                .padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 8.dp)
-                .semantics { heading() },
-        style = MaterialTheme.typography.titleSmallEmphasized,
-        color = MaterialTheme.colorScheme.primary,
-    )
+    if (action == null) {
+        Text(
+            text = text,
+            modifier =
+                modifier
+                    .padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 8.dp)
+                    .semantics { heading() },
+            style = MaterialTheme.typography.titleSmallEmphasized,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    } else {
+        Row(
+            modifier = modifier.padding(start = 16.dp, end = 8.dp, top = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = text,
+                modifier = Modifier.weight(1f).semantics { heading() },
+                style = MaterialTheme.typography.titleSmallEmphasized,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            action()
+        }
+    }
 }
 
 /** Default values for section items. */

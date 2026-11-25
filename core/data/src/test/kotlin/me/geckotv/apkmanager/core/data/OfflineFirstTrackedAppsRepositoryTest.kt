@@ -320,6 +320,43 @@ class OfflineFirstTrackedAppsRepositoryTest {
         }
 
     @Test
+    fun trackRepository_addsAppWithoutReleaseUntilTheNextCheck() =
+        runTest {
+            network.addRepository(ref, networkRelease(1, "v1.0.0"))
+            val repository = repository()
+
+            val id =
+                repository.trackRepository(
+                    this@OfflineFirstTrackedAppsRepositoryTest.repository,
+                    "com.example.app",
+                    "Example",
+                    false,
+                )
+
+            assertEquals(
+                id,
+                repository.trackRepository(GitHubRepository("OCTO", "app"), "com.example.app", "Example", false),
+            )
+            assertNull(
+                database
+                    .trackedAppDao()
+                    .getTrackedApps()
+                    .single()
+                    .latestRelease,
+            )
+            repository.checkForUpdates()
+            assertEquals(
+                "v1.0.0",
+                database
+                    .trackedAppDao()
+                    .getTrackedApps()
+                    .single()
+                    .latestRelease
+                    ?.tagName,
+            )
+        }
+
+    @Test
     fun removeApp_deletesIt() =
         runTest {
             network.addRepository(ref, networkRelease(1, "v1.0.0"))

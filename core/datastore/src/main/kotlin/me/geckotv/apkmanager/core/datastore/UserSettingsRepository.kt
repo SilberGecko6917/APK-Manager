@@ -18,4 +18,6 @@ interface UserSettingsRepository {
     suspend fun setHapticsEnabled(hapticsEnabled: Boolean)
 
     suspend fun setOnboardingCompleted(onboardingCompleted: Boolean)
+
+    suspend fun setSelfUpdatesTracked(selfUpdatesTracked: Boolean)
 }

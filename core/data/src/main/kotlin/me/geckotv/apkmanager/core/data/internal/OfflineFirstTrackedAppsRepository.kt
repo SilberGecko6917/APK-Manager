@@ -97,6 +97,29 @@ internal class OfflineFirstTrackedAppsRepository
             return id
         }
 
+        override suspend fun trackRepository(
+            repository: GitHubRepository,
+            packageName: String,
+            displayName: String,
+            includePrereleases: Boolean,
+        ): Long =
+            findTrackedApp(repository) ?: dao.insertTrackedApp(
+                TrackedAppEntity(
+                    owner = repository.owner,
+                    name = repository.name,
+                    displayName = displayName,
+                    description = null,
+                    ownerAvatarUrl = null,
+                    isPrivate = false,
+                    packageName = packageName,
+                    includePrereleases = includePrereleases,
+                    preferredAssetName = null,
+                    addedAt = clock.millis(),
+                    lastCheckedAt = null,
+                    releaseEtag = null,
+                ),
+            )
+
         override suspend fun removeApp(id: Long) {
             dao.deleteTrackedApp(id)
         }

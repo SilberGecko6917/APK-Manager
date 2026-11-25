@@ -134,16 +134,28 @@ APK Manager has no server, so it cannot keep a client secret. GitHub's **OAuth d
 
 ## Install pipeline
 
+`:core:installer` exposes `AppInstaller`: installs run in the application scope, so they continue when the user leaves the screen, and their state (`Downloading`, `Verifying`, `Installing`, `WaitingForUser`, `Succeeded`, `Failed`) is observable per app.
+
 ```
-download → verify file → inspect APK → compare with installed app → install → clean up
+pick APK → download → verify file → inspect APK → compare with installed app → install → clean up
 ```
 
-1. **Download.** Public repositories: `browser_download_url`. Private repositories: `GET /repos/{owner}/{repo}/releases/assets/{id}` with `Accept: application/octet-stream` and the token; the redirect to the storage host is followed **without** the `Authorization` header.
-2. **Verify the file:** size and SHA-256 digest (from the release asset's `digest` field when available).
-3. **Inspect the APK:** `PackageManager.getPackageArchiveInfo(…, GET_SIGNING_CERTIFICATES)` gives the package name, version code and signing certificates.
-4. **Compare with the installed app:** same package name as tracked, same signing certificate (including rotation history), no downgrade unless explicitly allowed.
-5. **Install** through the selected installer backend.
-6. **Clean up** the downloaded file.
+1. **Pick the APK** with `ApkAssets.select` (device ABI, remembered asset name).
+2. **Download** through the asset API URL (`GET /repos/{owner}/{repo}/releases/assets/{id}` with `Accept: application/octet-stream`), for public and private repositories alike. The redirect to the storage host is followed **without** the `Authorization` header. The SHA-256 digest is computed while the file is written to the cache directory.
+3. **Verify the file:** size and SHA-256 digest (from the release asset's `digest` field when GitHub provides it).
+4. **Inspect the APK:** `PackageManager.getPackageArchiveInfo(…, GET_SIGNING_CERTIFICATES)` gives the package name, version code and signing certificates (SHA-256 of each certificate).
+5. **Compare with the installed app** (`ApkVerifier`):
+   - the package name must match the linked package of the tracked app,
+   - the installed app's signer must be in the APK's signing lineage (APK Signature Scheme v3 key rotation); apps with several signers need the same signer set,
+   - no downgrade (lower `versionCode`).
+6. **Install** through a `PackageInstaller` session (`MODE_FULL_INSTALL`, `setRequireUserAction(USER_ACTION_NOT_REQUIRED)` on Android 12+, package source "downloaded file"). The session status arrives at a non-exported broadcast receiver through a mutable, explicit `PendingIntent`. `STATUS_PENDING_USER_ACTION` carries the system confirmation, which the UI launches while the app is in the foreground.
+7. **Clean up** the downloaded file. A tracked app without a linked package is linked to the installed package.
+
+Session failures are mapped to clear messages, including signature conflicts (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`) and Android developer verification failures (`EXTRA_DEVELOPER_VERIFICATION_FAILURE_REASON`, Android 16 QPR2+).
+
+### Self-updates
+
+Release builds add APK Manager's own repository (Gradle property `apkmanager.github.repository`) to the tracked apps once, linked to its own package, so it updates itself through the same pipeline. Pre-release builds follow pre-releases. Android kills the process while it replaces the app; the next start shows the new version.
 
 ### Installer backends
 

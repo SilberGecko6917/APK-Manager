@@ -1,5 +1,9 @@
 package me.geckotv.apkmanager.feature.apps
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,20 +21,28 @@ import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -38,8 +50,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import me.geckotv.apkmanager.core.designsystem.component.ApkManagerTopAppBar
 import me.geckotv.apkmanager.core.designsystem.component.section
@@ -68,8 +85,13 @@ fun AppsRoute(
     val resources = LocalResources.current
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(viewModel, resources) {
-        viewModel.messages.collect { message -> snackbarHostState.showSnackbar(message.text(resources)) }
+    MessagesEffect(messages = viewModel.messages, snackbarHostState = snackbarHostState)
+    (uiState as? AppsUiState.Ready)?.pendingConfirmation?.let { confirmation ->
+        ConfirmationLaunchEffect(
+            confirmation = confirmation,
+            onShow = viewModel::onConfirmationShown,
+            onFail = viewModel::onConfirmationFailed,
+        )
     }
 
     AppsScreen(
@@ -77,6 +99,8 @@ fun AppsRoute(
         snackbarHostState = snackbarHostState,
         onRefresh = viewModel::refresh,
         onAppClick = viewModel::selectApp,
+        onInstallClick = viewModel::install,
+        onUpdateAllClick = viewModel::updateAll,
         onAddAppClick = onAddAppClick,
         modifier = modifier,
         bottomContentPadding = bottomContentPadding,
@@ -102,7 +126,76 @@ fun AppsRoute(
             onPackageSelect = viewModel::setPackageName,
             onPickerBack = viewModel::closePackagePicker,
             onRemoveConfirm = viewModel::removeApp,
+            onInstallClick = { viewModel.install(actions.app.id) },
+            onInstallCancelClick = { viewModel.cancelInstall(actions.app.id) },
         )
+    }
+}
+
+/** Shows the one-off [messages] in snackbars; the message about a missing permission offers to open the setting. */
+@Composable
+private fun MessagesEffect(
+    messages: Flow<AppsMessage>,
+    snackbarHostState: SnackbarHostState,
+) {
+    val resources = LocalResources.current
+    val context = LocalContext.current
+    LaunchedEffect(messages, resources, context) {
+        messages.collect { message ->
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = message.text(resources),
+                    actionLabel =
+                        if (message.offersInstallPermission) {
+                            resources.getString(R.string.feature_apps_message_permission_allow)
+                        } else {
+                            null
+                        },
+                    withDismissAction = message.isInstallFailure,
+                    duration = if (message.isInstallFailure) SnackbarDuration.Long else SnackbarDuration.Short,
+                )
+            if (result == SnackbarResult.ActionPerformed) context.openInstallPermissionSettings()
+        }
+    }
+}
+
+/**
+ * Launches the system dialog that confirms an install while the app is in the foreground, and
+ * reports it so it is launched only once. If several apps wait, the next dialog follows only after
+ * the user is back in the app, so dialogs never stack.
+ */
+@Composable
+private fun ConfirmationLaunchEffect(
+    confirmation: PendingConfirmation,
+    onShow: (Long) -> Unit,
+    onFail: (Long) -> Unit,
+) {
+    val context = LocalContext.current
+    val currentOnShow by rememberUpdatedState(onShow)
+    val currentOnFail by rememberUpdatedState(onFail)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val lifecycleState by lifecycle.currentStateFlow.collectAsState()
+    var launchedSinceResume by remember { mutableStateOf(false) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { launchedSinceResume = false }
+    LaunchedEffect(confirmation, lifecycleState, launchedSinceResume) {
+        if (launchedSinceResume || !lifecycleState.isAtLeast(Lifecycle.State.RESUMED)) return@LaunchedEffect
+        launchedSinceResume = true
+        try {
+            context.startActivity(confirmation.intent)
+            currentOnShow(confirmation.appId)
+        } catch (_: ActivityNotFoundException) {
+            currentOnFail(confirmation.appId)
+        }
+    }
+}
+
+/** Opens the system setting that lets APK Manager install apps. */
+private fun Context.openInstallPermissionSettings() {
+    val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, "package:$packageName".toUri())
+    try {
+        startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
+        // No settings screen to show; the user can still allow it in the system settings by hand.
     }
 }
 
@@ -112,9 +205,12 @@ internal fun AppsScreen(
     snackbarHostState: SnackbarHostState,
     onRefresh: () -> Unit,
     onAppClick: (Long) -> Unit,
+    onInstallClick: (Long) -> Unit,
+    onUpdateAllClick: () -> Unit,
     onAddAppClick: () -> Unit,
     modifier: Modifier = Modifier,
     bottomContentPadding: Dp = 0.dp,
+    showProgressIndicator: Boolean = true,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -153,8 +249,11 @@ internal fun AppsScreen(
                     state = uiState,
                     onRefresh = onRefresh,
                     onAppClick = onAppClick,
+                    onInstallClick = onInstallClick,
+                    onUpdateAllClick = onUpdateAllClick,
                     modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
                     bottomPadding = innerPadding.calculateBottomPadding() + bottomContentPadding,
+                    showProgressIndicator = showProgressIndicator,
                 )
             }
         }
@@ -166,7 +265,10 @@ private fun AppsList(
     state: AppsUiState.Ready,
     onRefresh: () -> Unit,
     onAppClick: (Long) -> Unit,
+    onInstallClick: (Long) -> Unit,
+    onUpdateAllClick: () -> Unit,
     bottomPadding: Dp,
+    showProgressIndicator: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val headers =
@@ -174,7 +276,7 @@ private fun AppsList(
             stringResource(
                 R.string.feature_apps_group_header,
                 stringResource(group.kind.titleRes()),
-                group.apps.size,
+                group.items.size,
             )
         }
     PullToRefreshBox(
@@ -188,8 +290,27 @@ private fun AppsList(
                 PaddingValues(start = 16.dp, end = 16.dp, bottom = bottomPadding + 16.dp),
         ) {
             state.groups.forEachIndexed { index, group ->
-                section(items = group.apps, title = headers[index], key = { it.id }) { app ->
-                    AppListItem(app = app, onClick = { onAppClick(app.id) })
+                section(
+                    items = group.items,
+                    title = headers[index],
+                    key = { it.id },
+                    headerAction =
+                        if (group.canUpdateAll) {
+                            {
+                                TextButton(onClick = onUpdateAllClick) {
+                                    Text(text = stringResource(R.string.feature_apps_update_all))
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                ) { item ->
+                    AppListItem(
+                        item = item,
+                        onClick = { onAppClick(item.id) },
+                        onInstallClick = { onInstallClick(item.id) },
+                        showProgressIndicator = showProgressIndicator,
+                    )
                 }
             }
         }
@@ -276,6 +397,8 @@ private fun AppsEmptyLightPreview() {
             snackbarHostState = remember { SnackbarHostState() },
             onRefresh = {},
             onAppClick = {},
+            onInstallClick = {},
+            onUpdateAllClick = {},
             onAddAppClick = {},
         )
     }
@@ -290,6 +413,8 @@ private fun AppsEmptyDarkPreview() {
             snackbarHostState = remember { SnackbarHostState() },
             onRefresh = {},
             onAppClick = {},
+            onInstallClick = {},
+            onUpdateAllClick = {},
             onAddAppClick = {},
         )
     }
