@@ -37,6 +37,10 @@ updates:
       hilt:
         patterns:
           - "com.google.dagger*"
+      networking:
+        patterns:
+          - "com.squareup.okhttp3*"
+          - "com.squareup.retrofit2*"
       code-quality:
         patterns:
           - "com.diffplug.spotless*"

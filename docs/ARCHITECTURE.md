@@ -96,6 +96,13 @@ APK Manager has no server, so it cannot keep a client secret. GitHub's **OAuth d
 - Pre-releases use the release list endpoint and are filtered on the client.
 - `x-ratelimit-remaining`, `x-ratelimit-reset` and `retry-after` are always parsed. Checks back off when the quota runs low.
 
+### Networking (`:core:network`)
+
+- `GitHubNetworkDataSource` wraps the REST endpoints (repository, latest release, releases, asset download) and the batched GraphQL query. Every call returns a `GitHubResult`: `Success` (with the `ETag`), `NotModified` or `Failure` with a `GitHubError` (`NotFound`, `Unauthorized`, `Forbidden`, `RateLimited`, `Server`, `Network`, `Unexpected`).
+- All requests to `api.github.com` send `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`, a `User-Agent` and, when signed in, the token. The token is supplied by a `GitHubCredentialsProvider`.
+- `RateLimitTracker` exposes the latest `x-ratelimit-*` values per resource as a `StateFlow`.
+- Asset downloads use the asset API URL with `Accept: application/octet-stream`. GitHub redirects to a storage host; the token is never sent there, which a test verifies.
+
 ### Version detection
 
 1. If the app was installed through APK Manager, compare the stored release ID / tag with the latest release.

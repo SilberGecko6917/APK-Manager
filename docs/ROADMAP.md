@@ -21,7 +21,7 @@ The first usable version: track GitHub apps and install updates manually.
   - Navigation 3 with predictive back and adaptive two-pane layouts
   - Onboarding: install-unknown-apps and notification permissions
   - Screen skeletons: Apps, Settings
-- [ ] **GitHub client** (`feat/github-client`)
+- [x] **GitHub client** (`feat/github-client`)
   - REST and GraphQL clients, ETag caching, rate limit tracking
   - Release and asset models, tests against MockWebServer
 - [ ] **GitHub sign-in** (`feat/github-auth`)
