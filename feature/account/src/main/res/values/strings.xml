@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_account_title">GitHub account</string>
+    <string name="feature_account_intro">Sign in to raise the API limit from 60 to 5,000 requests per hour and to track apps from private repositories.</string>
+    <string name="feature_account_access">Access</string>
+    <string name="feature_account_access_public">Public repos</string>
+    <string name="feature_account_access_private">Private repos</string>
+    <string name="feature_account_access_public_summary">Only public repositories can be tracked. No special permissions are requested.</string>
+    <string name="feature_account_access_private_summary">Requests the repo scope, which GitHub shows as full access to your repositories. APK Manager only reads releases.</string>
+    <string name="feature_account_sign_in">Sign in with GitHub</string>
+    <string name="feature_account_other_options">Other options</string>
+    <string name="feature_account_use_token">Use a personal access token</string>
+    <string name="feature_account_use_token_summary">Fine-grained tokens with Contents: Read on selected repositories work too</string>
+    <string name="feature_account_method_oauth">OAuth</string>
+    <string name="feature_account_method_token">Personal access token</string>
+    <string name="feature_account_level_public">Public repositories</string>
+    <string name="feature_account_level_private">Private repositories</string>
+    <string name="feature_account_account_summary">%1$s · %2$s</string>
+    <string name="feature_account_token_invalid">Token no longer valid</string>
+    <string name="feature_account_token_invalid_summary">Sign in again</string>
+    <string name="feature_account_rate_limit">API rate limit</string>
+    <string name="feature_account_remaining">Remaining requests</string>
+    <string name="feature_account_remaining_value">%1$s of %2$s</string>
+    <string name="feature_account_unknown">Unknown</string>
+    <string name="feature_account_resets">Resets</string>
+    <string name="feature_account_sign_out">Sign out</string>
+    <string name="feature_account_error_expired">The code expired before it was authorized. Try again.</string>
+    <string name="feature_account_error_denied">Authorization was denied on GitHub.</string>
+    <string name="feature_account_error_invalid_token">GitHub rejected this token. Check that it is correct and has not expired.</string>
+    <string name="feature_account_error_network">Could not reach GitHub. Check your connection.</string>
+    <string name="feature_account_error_unknown">Sign-in failed. Check that device flow is enabled for the OAuth app.</string>
+    <string name="feature_account_dismiss_error">Dismiss</string>
+    <string name="feature_account_device_code_title">Enter this code on GitHub</string>
+    <string name="feature_account_copy_and_open">Copy code and open GitHub</string>
+    <string name="feature_account_waiting">Waiting for authorization…</string>
+    <string name="feature_account_cancel">Cancel</string>
+    <string name="feature_account_code_label">GitHub device code</string>
+    <string name="feature_account_token_label">Personal access token</string>
+    <string name="feature_account_token_hint">Create one at github.com/settings/tokens</string>
+    <string name="feature_account_token_sign_in">Sign in</string>
+</resources>
