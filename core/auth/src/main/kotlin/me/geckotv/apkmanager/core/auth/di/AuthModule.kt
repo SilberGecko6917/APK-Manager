@@ -28,7 +28,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
-import java.time.Clock
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -69,9 +68,6 @@ internal object AuthModule {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
             .create(GitHubOAuthApi::class.java)
-
-    @Provides
-    fun providesClock(): Clock = Clock.systemUTC()
 }
 
 @Module
