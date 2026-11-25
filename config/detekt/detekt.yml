@@ -1,0 +1,47 @@
+# Detekt configuration. Builds upon the default configuration (`buildUponDefaultConfig = true`),
+# so only deviations from the defaults are listed here.
+
+naming:
+  FunctionNaming:
+    # Composable functions use PascalCase.
+    ignoreAnnotated:
+      - Composable
+  TopLevelPropertyNaming:
+    constantPattern: "[A-Z][A-Za-z0-9_]*"
+
+complexity:
+  LongParameterList:
+    # Composables commonly take many parameters (state, callbacks, modifier).
+    ignoreAnnotated:
+      - Composable
+  TooManyFunctions:
+    ignoreAnnotatedFunctions:
+      - Preview
+
+style:
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreAnnotated:
+      - Composable
+      - Preview
+  UnusedPrivateMember:
+    ignoreAnnotated:
+      - Preview
+  ForbiddenComment:
+    active: false
+
+# Compose rules (io.nlopez.compose.rules:detekt)
+Compose:
+  ModifierMissing:
+    active: true
+  ModifierReused:
+    active: true
+  ModifierWithoutDefault:
+    active: true
+  MutableParams:
+    active: true
+  ViewModelForwarding:
+    active: true
+  ViewModelInjection:
+    active: true
