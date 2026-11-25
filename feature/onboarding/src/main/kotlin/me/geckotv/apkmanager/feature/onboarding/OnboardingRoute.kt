@@ -54,7 +54,10 @@ fun OnboardingRoute(
             )
         },
         onRequestNotificationPermission = {
-            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            // The notifications row is only shown on Android 13+, where the runtime permission exists.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         },
         onFinish = viewModel::completeOnboarding,
         modifier = modifier,
