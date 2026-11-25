@@ -20,7 +20,7 @@ This document describes the technical design of APK Manager. It is updated as th
 | UI | Jetpack Compose, Material 3 (Expressive components), Material Symbols icons, materialKolor (seed color schemes) |
 | Navigation | Navigation 3 |
 | Dependency injection | Hilt |
-| Persistence | Room (tracked apps, releases), DataStore (settings, encrypted token) |
+| Persistence | Room 3 (tracked apps, latest releases), DataStore (settings, encrypted token) |
 | Networking | OkHttp, Retrofit, kotlinx.serialization |
 | Background work | WorkManager |
 | Images | Coil |
@@ -34,17 +34,20 @@ Exact versions live in `gradle/libs.versions.toml`.
 ```
 :app                  MainActivity, navigation shell, DI wiring
 :core:designsystem    Theme, typography, shapes, shared components
-:core:model           Domain models (plain Kotlin)
-:core:common          Coroutine dispatchers, result types, utilities
-:core:network         GitHub REST + GraphQL clients, authentication, rate limits
+:core:model           Domain models and pure logic (versions, asset selection, input parsing), plain Kotlin
+:core:common          Coroutine dispatchers, application scope, clock
+:core:network         GitHub REST + GraphQL clients, rate limits
+:core:auth            GitHub sign-in (device flow, personal access tokens), encrypted token storage
 :core:database        Room database, DAOs, entities
-:core:datastore       Settings and encrypted credentials
-:core:data            Repositories, source providers, update checking
+:core:datastore       Settings
+:core:data            Repositories: tracked apps, installed apps, update checking
 :core:installer       Download, verification, installer backends
-:feature:apps         Apps list
+:core:testing         Test fakes and rules
+:feature:apps         Apps list, "Add app" flow
 :feature:details      App details, release and asset selection
-:feature:add          "Add app" flow
-:feature:settings     Settings, account, about
+:feature:onboarding   First-launch permissions
+:feature:account      GitHub account and sign-in
+:feature:settings     Settings, about
 :feature:discover     Catalog and search (v1.0)
 build-logic/          Gradle convention plugins
 ```
@@ -104,18 +107,30 @@ APK Manager has no server, so it cannot keep a client secret. GitHub's **OAuth d
 - `RateLimitTracker` exposes the latest `x-ratelimit-*` values per resource as a `StateFlow`.
 - Asset downloads use the asset API URL with `Accept: application/octet-stream`. GitHub redirects to a storage host; the token is never sent there, which a test verifies.
 
+### Tracked apps (`:core:data`)
+
+- The database (`:core:database`, Room 3) stores each tracked app (repository, linked package name, pre-release setting, preferred asset name, ETag) with its **latest release** and that release's assets. Older releases are fetched on demand.
+- `TrackedAppsRepository` combines the database with the installed apps: `TrackedApp.updateStatus` compares the installed version with the latest release (see below) and updates when apps are installed, updated or removed (package broadcasts).
+- `ReleaseChecker` checks all apps with as few requests as possible:
+  - **Signed in:** one GraphQL query per 50 apps returns the latest release IDs; only apps whose release changed are fetched again through REST for their assets and notes.
+  - **Signed out:** `GET …/releases/latest` per app with the stored `ETag`.
+  - **Pre-releases included:** `GET …/releases` per app (with `ETag`), because "latest" skips pre-releases.
+  - It stops at the first rate limit error and reports the remaining apps as rate limited.
+- Adding an app looks up the repository and its 20 newest releases once, so the "Add app" sheet can switch between stable and pre-releases and pick an asset without further requests.
+- Installed apps are read through `PackageManager`, which needs `QUERY_ALL_PACKAGES` to see apps from other sources.
+
 ### Version detection
 
 1. If the app was installed through APK Manager, compare the stored release ID / tag with the latest release.
-2. Otherwise, compare the release tag with the installed `versionName` using a tolerant semantic version parser (an optional per-app regex can extract the version from the tag).
+2. Otherwise, compare the release tag with the installed `versionName` using a tolerant version parser (`Version`): it takes the first number sequence (`v1.2.3`, `release-2024.05.01`), understands pre-release labels (`dev` < `alpha` < `beta` < `pre` < `rc` < final) and ignores other suffixes (`-foss`, `(45)`, `+build`). Tags without a number (`nightly`) are compared as normalized text; if they still differ, the status is "unknown". An optional per-app regex to extract the version from the tag follows in v0.2.
 3. After downloading, the APK's `versionCode` is authoritative.
 
 ### Asset selection
 
 1. Only `.apk` assets (later also `.apks` / `.xapk`). Ignore checksums, signatures and debug builds.
 2. Apply the per-app include/exclude regex.
-3. Rank by device ABI (`Build.SUPPORTED_ABIS` order), then universal APKs.
-4. If the choice is still ambiguous, ask the user once and remember the choice.
+3. Rank by device ABI (`Build.SUPPORTED_ABIS` order, ABI tokens such as `arm64`, `aarch64`, `armv7`, `x86_64` in the file name), then universal APKs, then debug builds. Incompatible ABIs are left out.
+4. If the choice is still ambiguous, ask the user once and remember the asset name. Later releases match it with versions and numbers ignored (`app-v1.2.0-arm64.apk` matches `app-v1.3.1-arm64.apk`).
 
 ## Install pipeline
 
