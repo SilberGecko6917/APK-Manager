@@ -1,5 +1,6 @@
 package me.geckotv.apkmanager.feature.apps
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -74,6 +76,8 @@ internal fun AddAppSheet(
                 stringResource(R.string.feature_apps_add_title)
             },
     ) {
+        // System back goes one step back inside the sheet; on the first step it closes the sheet.
+        BackHandler(enabled = step !is AddAppStep.Input, onBack = viewModel::back)
         AddAppSheetContent(
             state = state,
             onInputChange = viewModel::setInput,
@@ -253,14 +257,17 @@ private fun AddAppFailed(
         SectionItemIcon(ApkManagerIcons.Error)
         Text(
             text = messages.first(),
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
         )
         messages.drop(1).forEach { message ->
             Text(
                 text = message,
+                modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         }
         Row(

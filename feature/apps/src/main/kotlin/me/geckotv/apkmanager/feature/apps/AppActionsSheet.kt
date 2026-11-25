@@ -1,5 +1,6 @@
 package me.geckotv.apkmanager.feature.apps
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +52,10 @@ internal fun AppActionsSheet(
     val app = state.app
 
     ApkManagerBottomSheet(onDismissRequest = onDismiss, modifier = modifier) {
+        // System back leaves the package picker or the confirmation first, then closes the sheet.
+        BackHandler(enabled = installedApps != null || isConfirmingRemove) {
+            if (installedApps != null) onPickerBack() else isConfirmingRemove = false
+        }
         when {
             installedApps != null -> {
                 PackagePicker(
