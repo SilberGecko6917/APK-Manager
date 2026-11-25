@@ -23,6 +23,8 @@ complexity:
     ignoreAnnotated:
       - Composable
   TooManyFunctions:
+    # Implementations of an interface should not be penalized for its size.
+    ignoreOverridden: true
     ignoreAnnotatedFunctions:
       - Preview
 

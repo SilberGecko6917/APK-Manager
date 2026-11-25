@@ -11,6 +11,8 @@ import me.geckotv.apkmanager.core.database.model.ReleaseAssetEntity
 import me.geckotv.apkmanager.core.database.model.TrackedAppEntity
 import me.geckotv.apkmanager.core.database.model.TrackedAppWithRelease
 
+// A DAO has one function per query.
+@Suppress("TooManyFunctions")
 @Dao
 interface TrackedAppDao {
     @Transaction
