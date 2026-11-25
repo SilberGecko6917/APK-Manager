@@ -29,17 +29,20 @@ The first usable version: track GitHub apps and install updates manually.
   - Fine-grained personal access token as an alternative
   - Token encrypted with an Android Keystore key, excluded from backups
   - Account screen with live rate limit
-- [ ] **App tracking** (`feat/app-tracking`)
+- [x] **App tracking** (`feat/app-tracking`, `feat/apps-ui`, #17, #18) (a full details screen with a Markdown changelog follows)
   - Room database for tracked apps, releases and install state
   - "Add app" sheet: URL / `owner/repo` parsing, repository preview, asset picker, package mapping
-  - Apps list grouped by "Updates", "Up to date" and "Not installed"; app details with Markdown changelog
-- [ ] **APK installer** (`feat/apk-installer`)
+  - Apps list grouped by "Updates", "Up to date" and "Not installed"; app actions sheet
+- [x] **APK installer** (`feat/apk-installer`)
   - Download with progress (public and private repos)
   - Verification: SHA-256 digest, package name, version code, signing certificate
   - Installation via `PackageInstaller` sessions
-- [x] **Release pipeline** (`ci/release`, self-update follows with app tracking)
-  - Signed release APK attached to GitHub Releases on `v*` tags
-  - APK Manager can track its own repository to update itself
+- [x] **Release pipeline** (`ci/release`, #15, #16)
+  - Signed release APK attached to GitHub Releases on `v*` tags or a manual workflow run
+  - APK Manager tracks its own repository to update itself
+- [ ] **App details** (`feat/app-details`)
+  - Details screen with installed version, release history and Markdown changelog
+  - Adaptive two-pane layout on large screens
 
 ## v0.2 — Background
 
