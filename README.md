@@ -26,6 +26,16 @@ Planned for the first releases:
 
 Later: more sources (Codeberg/Forgejo, GitLab, F-Droid repositories) and a **Discover** tab backed by a community catalog.
 
+## Screenshots
+
+The design system so far (light, dark and pitch black):
+
+<p>
+  <img src="docs/images/design-system-light.webp" width="250" alt="Design system in the light theme">
+  <img src="docs/images/design-system-dark.webp" width="250" alt="Design system in the dark theme">
+  <img src="docs/images/design-system-amoled.webp" width="250" alt="Design system in the pitch black theme">
+</p>
+
 ## Requirements
 
 - Android 8.0 (API 26) or newer.
@@ -61,6 +71,8 @@ Security issues: see [SECURITY.md](SECURITY.md).
 ## Acknowledgements
 
 - The visual language is inspired by [Essentials](https://github.com/sameerasw/essentials) by Sameera Sandakelum (MIT License).
+- Typeface: [Google Sans Flex](https://github.com/googlefonts/googlesans-flex) (SIL Open Font License 1.1), see [third_party](third_party/README.md).
+- Icons: [Material Symbols](https://fonts.google.com/icons) (Apache License 2.0).
 - The idea of tracking apps directly from their source is inspired by [Obtainium](https://github.com/ImranR98/Obtainium).
 
 ## License

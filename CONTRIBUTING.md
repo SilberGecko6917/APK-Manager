@@ -68,6 +68,8 @@ Common commit types:
   ./gradlew spotlessApply detekt lint test
   ```
 
+- For UI changes, render the screenshot tests with `./gradlew recordRoborazziDebug` and attach the
+  images from `build/outputs/roborazzi/` to your pull request. CI also uploads them as an artifact.
 - Follow the Jetpack Compose guidelines:
   - Keep composables stateless where possible and hoist state to the caller.
   - Provide `@Preview` functions for new UI components.

@@ -7,15 +7,16 @@ Design and technical decisions are described in [ARCHITECTURE.md](ARCHITECTURE.m
 
 The first usable version: track GitHub apps and install updates manually.
 
-- [ ] **Project setup** (`chore/project-setup`)
+- [x] **Project setup** (`chore/project-setup`, #9)
   - Gradle version catalog, `build-logic` convention plugins, module skeleton
   - Spotless (ktlint), Detekt, Android Lint
   - CI: build, unit tests and static analysis on every pull request
   - Dependabot for Gradle and GitHub Actions
-- [ ] **Design system** (`feat/design-system`)
+- [x] **Design system** (`feat/design-system`)
   - Theme: Material You dynamic color, custom seed color, light/dark/AMOLED black
   - Typography (rounded variable font), shapes and motion
-  - Grouped rounded cards (24 dp outer / 4 dp inner corners), flexible top app bars, floating toolbar, bottom sheets
+  - Grouped segmented lists, flexible top app bars, floating toolbar navigation, button groups, bottom sheets
+  - Screenshot tests (Roborazzi) for light, dark and pitch black themes
 - [ ] **App shell** (`feat/app-shell`)
   - Navigation 3 with predictive back and adaptive two-pane layouts
   - Onboarding: install-unknown-apps and notification permissions
