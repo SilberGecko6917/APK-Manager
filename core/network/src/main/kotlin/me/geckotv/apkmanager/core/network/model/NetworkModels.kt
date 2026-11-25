@@ -24,6 +24,25 @@ data class NetworkOwner(
     @SerialName("avatar_url") val avatarUrl: String? = null,
 )
 
+/** The signed-in user as returned by `GET /user`. */
+@Serializable
+data class NetworkUser(
+    val login: String,
+    val name: String? = null,
+    @SerialName("avatar_url") val avatarUrl: String? = null,
+)
+
+/**
+ * The user a token belongs to.
+ *
+ * @property scopes OAuth scopes of the token from the `X-OAuth-Scopes` header, or `null` when GitHub
+ *   does not report scopes (fine-grained personal access tokens).
+ */
+data class NetworkAuthenticatedUser(
+    val user: NetworkUser,
+    val scopes: Set<String>?,
+)
+
 /** A release as returned by the REST releases endpoints. */
 @Serializable
 data class NetworkRelease(

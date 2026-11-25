@@ -32,8 +32,11 @@ internal class GitHubRequestInterceptor(
                 .header("User-Agent", USER_AGENT)
                 .header("X-GitHub-Api-Version", GITHUB_API_VERSION)
         if (request.header("Accept") == null) builder.header("Accept", ACCEPT_JSON)
-        credentialsProvider.token()?.takeIf { it.isNotBlank() }?.let { token ->
-            builder.header("Authorization", "Bearer $token")
+        // A request may carry its own token, e.g. to validate a token before storing it.
+        if (request.header("Authorization") == null) {
+            credentialsProvider.token()?.takeIf { it.isNotBlank() }?.let { token ->
+                builder.header("Authorization", "Bearer $token")
+            }
         }
         return chain.proceed(builder.build())
     }

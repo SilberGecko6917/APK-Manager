@@ -44,11 +44,6 @@ internal object NetworkModule {
         okHttpClient: OkHttpClient,
         json: Json,
     ): GitHubApi = createGitHubApi(GITHUB_API_URL, okHttpClient, json)
-
-    /** Unauthenticated until GitHub sign-in is implemented. */
-    @Provides
-    @Singleton
-    fun providesCredentialsProvider(): GitHubCredentialsProvider = GitHubCredentialsProvider { null }
 }
 
 @Module
