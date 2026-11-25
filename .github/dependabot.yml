@@ -1,8 +1,22 @@
 version: 2
 
+# Maven Central rate-limits shared CI IP ranges (HTTP 429), so Dependabot resolves
+# Maven Central artifacts through Google's official mirror instead.
+registries:
+  maven-central-mirror:
+    type: maven-repository
+    url: https://maven-central.storage-download.googleapis.com/maven2/
+    replaces-base: true
+  google:
+    type: maven-repository
+    url: https://dl.google.com/dl/android/maven2/
+
 updates:
   - package-ecosystem: gradle
     directory: /
+    registries:
+      - maven-central-mirror
+      - google
     schedule:
       interval: weekly
     commit-message:
