@@ -3,6 +3,7 @@ package me.geckotv.apkmanager.core.network.internal
 import kotlinx.serialization.json.JsonObject
 import me.geckotv.apkmanager.core.network.model.NetworkRelease
 import me.geckotv.apkmanager.core.network.model.NetworkRepository
+import me.geckotv.apkmanager.core.network.model.NetworkUser
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -15,6 +16,11 @@ import retrofit2.http.Streaming
 
 /** Retrofit definition of the GitHub REST and GraphQL endpoints the app uses. */
 internal interface GitHubApi {
+    @GET("user")
+    suspend fun user(
+        @Header("Authorization") authorization: String,
+    ): Response<NetworkUser>
+
     @GET("repos/{owner}/{repo}")
     suspend fun repository(
         @Path("owner") owner: String,

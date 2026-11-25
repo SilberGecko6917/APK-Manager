@@ -1,6 +1,7 @@
 package me.geckotv.apkmanager.core.network
 
 import me.geckotv.apkmanager.core.network.model.GitHubResult
+import me.geckotv.apkmanager.core.network.model.NetworkAuthenticatedUser
 import me.geckotv.apkmanager.core.network.model.NetworkRelease
 import me.geckotv.apkmanager.core.network.model.NetworkReleaseSummary
 import me.geckotv.apkmanager.core.network.model.NetworkRepository
@@ -9,6 +10,9 @@ import okhttp3.ResponseBody
 
 /** Access to the GitHub API. */
 interface GitHubNetworkDataSource {
+    /** The user [token] belongs to, also used to check that a token is valid. */
+    suspend fun authenticatedUser(token: String): GitHubResult<NetworkAuthenticatedUser>
+
     suspend fun repository(repository: RepositoryRef): GitHubResult<NetworkRepository>
 
     /**

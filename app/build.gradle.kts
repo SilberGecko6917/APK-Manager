@@ -11,6 +11,9 @@ android {
         applicationId = "me.geckotv.apkmanager"
         versionCode = 1
         versionName = "0.1.0-dev"
+
+        val githubClientId = providers.gradleProperty("apkmanager.github.clientId").get()
+        buildConfigField("String", "GITHUB_CLIENT_ID", "\"$githubClientId\"")
     }
 
     buildTypes {
@@ -46,10 +49,12 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.auth)
     implementation(projects.core.common)
     implementation(projects.core.datastore)
     implementation(projects.core.designsystem)
     implementation(projects.core.model)
+    implementation(projects.feature.account)
     implementation(projects.feature.apps)
     implementation(projects.feature.onboarding)
     implementation(projects.feature.settings)

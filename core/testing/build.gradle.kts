@@ -7,6 +7,7 @@ android {
 }
 
 dependencies {
+    api(projects.core.auth)
     api(projects.core.datastore)
     api(projects.core.model)
     api(libs.junit4)

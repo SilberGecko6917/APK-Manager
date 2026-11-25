@@ -78,6 +78,23 @@ class RetrofitGitHubNetworkTest {
         }
 
     @Test
+    fun authenticatedUserSendsTheGivenTokenAndReadsTheScopes() =
+        runTest {
+            token = "stored-token"
+            server.enqueue(json("""{"login":"octocat","name":"The Octocat"}""", "X-OAuth-Scopes" to "repo, read:org"))
+            server.enqueue(json("""{"login":"octocat"}"""))
+
+            val classic = (network.authenticatedUser("new-token") as GitHubResult.Success).data
+            val fineGrained = (network.authenticatedUser("fine-grained") as GitHubResult.Success).data
+
+            assertEquals("octocat", classic.user.login)
+            assertEquals(setOf("repo", "read:org"), classic.scopes)
+            assertNull(fineGrained.scopes)
+            // The explicit token wins over the stored one.
+            assertEquals("Bearer new-token", server.takeRequest().headers["Authorization"])
+        }
+
+    @Test
     fun returnsNotModifiedForAMatchingEtag() =
         runTest {
             server.enqueue(MockResponse.Builder().code(304).build())

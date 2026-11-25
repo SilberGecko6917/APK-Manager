@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_settings_title">Settings</string>
+    <string name="feature_settings_account">Account</string>
+    <string name="feature_settings_github_account">GitHub account</string>
+    <string name="feature_settings_github_account_summary">Sign in for private repositories and higher API limits</string>
     <string name="feature_settings_appearance">Appearance</string>
     <string name="feature_settings_theme_system">System</string>
     <string name="feature_settings_theme_light">Light</string>

@@ -10,6 +10,7 @@ import me.geckotv.apkmanager.core.network.GitHubCredentialsProvider
 import me.geckotv.apkmanager.core.network.GitHubNetworkDataSource
 import me.geckotv.apkmanager.core.network.model.GitHubError
 import me.geckotv.apkmanager.core.network.model.GitHubResult
+import me.geckotv.apkmanager.core.network.model.NetworkAuthenticatedUser
 import me.geckotv.apkmanager.core.network.model.NetworkRelease
 import me.geckotv.apkmanager.core.network.model.NetworkReleaseSummary
 import me.geckotv.apkmanager.core.network.model.NetworkRepository
@@ -27,6 +28,38 @@ internal class RetrofitGitHubNetwork
         private val api: GitHubApi,
         private val credentialsProvider: GitHubCredentialsProvider,
     ) : GitHubNetworkDataSource {
+        override suspend fun authenticatedUser(token: String): GitHubResult<NetworkAuthenticatedUser> =
+            try {
+                val response = api.user("Bearer $token")
+                when (val result = response.toResult()) {
+                    is GitHubResult.Success -> {
+                        val scopes =
+                            response.headers()["X-OAuth-Scopes"]?.let { header ->
+                                header
+                                    .split(",")
+                                    .map(String::trim)
+                                    .filter(String::isNotEmpty)
+                                    .toSet()
+                            }
+                        GitHubResult.Success(NetworkAuthenticatedUser(result.data, scopes), result.etag)
+                    }
+
+                    is GitHubResult.Failure -> {
+                        result
+                    }
+
+                    GitHubResult.NotModified -> {
+                        GitHubResult.Failure(GitHubError.Unexpected(NOT_MODIFIED, null))
+                    }
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: IOException) {
+                GitHubResult.Failure(GitHubError.Network(exception))
+            } catch (exception: SerializationException) {
+                GitHubResult.Failure(GitHubError.Unexpected(code = null, message = exception.message))
+            }
+
         override suspend fun repository(repository: RepositoryRef): GitHubResult<NetworkRepository> =
             call { api.repository(repository.owner, repository.name) }
 
