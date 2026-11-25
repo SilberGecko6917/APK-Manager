@@ -1,0 +1,21 @@
+package me.geckotv.apkmanager.core.datastore
+
+import kotlinx.coroutines.flow.Flow
+import me.geckotv.apkmanager.core.model.ThemeMode
+import me.geckotv.apkmanager.core.model.UserSettings
+
+/** Reads and writes the [UserSettings]. */
+interface UserSettingsRepository {
+    /** The current settings; emits again whenever a setting changes. */
+    val settings: Flow<UserSettings>
+
+    suspend fun setThemeMode(themeMode: ThemeMode)
+
+    suspend fun setUseDynamicColor(useDynamicColor: Boolean)
+
+    suspend fun setUseAmoledBlack(useAmoledBlack: Boolean)
+
+    suspend fun setHapticsEnabled(hapticsEnabled: Boolean)
+
+    suspend fun setOnboardingCompleted(onboardingCompleted: Boolean)
+}
