@@ -44,6 +44,9 @@ object ApkManagerIcons {
     val Code: Int = R.drawable.core_designsystem_ic_code
 
     @DrawableRes
+    val ContentPaste: Int = R.drawable.core_designsystem_ic_content_paste
+
+    @DrawableRes
     val Contrast: Int = R.drawable.core_designsystem_ic_contrast
 
     @DrawableRes
@@ -107,6 +110,9 @@ object ApkManagerIcons {
     val SettingsFilled: Int = R.drawable.core_designsystem_ic_settings_filled
 
     @DrawableRes
+    val Star: Int = R.drawable.core_designsystem_ic_star
+
+    @DrawableRes
     val Sync: Int = R.drawable.core_designsystem_ic_sync
 
     @DrawableRes
@@ -114,4 +120,7 @@ object ApkManagerIcons {
 
     @DrawableRes
     val Vibration: Int = R.drawable.core_designsystem_ic_vibration
+
+    @DrawableRes
+    val Warning: Int = R.drawable.core_designsystem_ic_warning
 }

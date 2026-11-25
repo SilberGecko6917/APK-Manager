@@ -10,12 +10,15 @@ import java.time.Instant
 
 /** Sample data for tests and screenshot tests. */
 object TestData {
+    private const val DEFAULT_ASSET_SIZE = 12_345_678L
+    private const val ASSET_ID_FACTOR = 10L
+
     val publishedAt: Instant = Instant.parse("2026-11-20T12:00:00Z")
 
     fun asset(
         id: Long,
         name: String,
-        size: Long = 12_345_678,
+        size: Long = DEFAULT_ASSET_SIZE,
     ) = ReleaseAsset(
         id = id,
         name = name,
@@ -30,7 +33,7 @@ object TestData {
         id: Long,
         tag: String,
         isPrerelease: Boolean = false,
-        assets: List<ReleaseAsset> = listOf(asset(id * 10, "app-$tag.apk")),
+        assets: List<ReleaseAsset> = listOf(asset(id * ASSET_ID_FACTOR, "app-$tag.apk")),
     ) = Release(
         id = id,
         tagName = tag,
@@ -56,6 +59,7 @@ object TestData {
         isSystemApp = isSystemApp,
     )
 
+    @Suppress("LongParameterList")
     fun trackedApp(
         id: Long,
         repository: GitHubRepository,
