@@ -1,7 +1,15 @@
 # Detekt configuration. Builds upon the default configuration (`buildUponDefaultConfig = true`),
 # so only deviations from the defaults are listed here.
 
+config:
+  validation: true
+  # Rule options of the Compose rule set are not part of its default config, so detekt cannot validate them.
+  excludes: "Compose>.*"
+
 naming:
+  # ktlint's filename rule already covers this; Compose files are named after their main composable.
+  MatchingDeclarationName:
+    active: false
   FunctionNaming:
     # Composable functions use PascalCase.
     ignoreAnnotated:
@@ -33,6 +41,10 @@ style:
 
 # Compose rules (io.nlopez.compose.rules:detekt)
 Compose:
+  CompositionLocalAllowlist:
+    active: true
+    allowedCompositionLocals:
+      - LocalSectionItemShapes
   ModifierMissing:
     active: true
   ModifierReused:
