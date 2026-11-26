@@ -161,6 +161,8 @@ pick APK → download → verify file → inspect APK → compare with installed
 6. **Install** through a `PackageInstaller` session (`MODE_FULL_INSTALL`, `setRequireUserAction(USER_ACTION_NOT_REQUIRED)` on Android 12+, package source "downloaded file"). The session status arrives at a non-exported broadcast receiver through a mutable, explicit `PendingIntent`. `STATUS_PENDING_USER_ACTION` carries the system confirmation, which the UI launches while the app is in the foreground.
 7. **Clean up** the downloaded file and remember the installed release. A tracked app without a linked package is linked to the installed package.
 
+While installs run, `InstallNotifications` shows one notification per app (download progress with "Cancel", checking, installing, or "Tap to install" when the system confirmation is waiting) and runs `InstallService`, a `dataSync` foreground service, so Android does not stop a download when the user leaves the app.
+
 Session failures are mapped to clear messages, including signature conflicts (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`) and Android developer verification failures (`EXTRA_DEVELOPER_VERIFICATION_FAILURE_REASON`, Android 16 QPR2+).
 
 ### Self-updates
