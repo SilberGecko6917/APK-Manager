@@ -124,6 +124,7 @@ APK Manager has no server, so it cannot keep a client secret. GitHub's **OAuth d
 - `UpdateCheckScheduler` follows the settings: while background checks are on, a unique periodic WorkManager job runs every 6, 12 or 24 hours with a network constraint (any network, or unmetered only) and "battery not low"; turning checks off cancels it.
 - `UpdateCheckWorker` (`@HiltWorker`) runs the same `checkForUpdates()` as the app and retries with WorkManager's backoff when no app could be checked (e.g. offline).
 - `UpdateNotifier` posts one notification per app with an update, grouped under a summary, and only once per release (`tracked_apps.notified_release_id`). Notifications of apps that are up to date again are removed.
+- Apps whose updates are installed automatically are not notified after a check; instead the check schedules the [automatic updates](#automatic-updates).
 - WorkManager is initialized on demand with Hilt's worker factory (`ApkManagerApplication` implements `Configuration.Provider`; the default initializer is removed in the manifest).
 
 ### Version detection
@@ -184,15 +185,23 @@ interface Installer {
 
 ## Automatic updates
 
-Without root or Shizuku, Android 12+ allows unattended updates through `setRequireUserAction(USER_ACTION_NOT_REQUIRED)` only when:
+Each tracked app has an update policy: **notify only** or **install automatically**. Apps without their own policy follow the default in the settings (notify only).
+
+1. After a background check, `AutoUpdater` (`:core:work`) picks the apps to update: policy "install automatically", installed, an update available, and a release APK Manager has not tried before (`tracked_apps.auto_update_release_id`). These apps are not notified.
+2. If there are any, `AutoUpdateScheduler` enqueues a unique one-time `AutoUpdateWorker` with the constraints from the settings: unmetered network (default on), charging (default off), and always "battery not low". The check itself stays cheap.
+3. `AutoUpdateWorker` installs the updates one after another through `AppInstaller` (APK Manager itself last, because updating it ends the process), so the usual download, verification and install notifications apply. Each release is tried once:
+   - **installed:** an "updated" notification in a low-importance channel,
+   - **Android asks for a confirmation:** the install notification says "Tap to install",
+   - **failed for good** (e.g. a different signing key): notified like any other update,
+   - **failed for a reason that may pass** (offline, server error, rate limit, storage): retried with WorkManager's backoff and at the next check.
+
+Without root or Shizuku, Android 12+ installs an update without asking (`setRequireUserAction(USER_ACTION_NOT_REQUIRED)`) only when:
 
 - APK Manager holds `REQUEST_INSTALL_PACKAGES` and declares `UPDATE_PACKAGES_WITHOUT_USER_ACTION`,
-- APK Manager is the installer of record (or update owner) of the app being updated, and
-- the app being updated targets a recent enough SDK (e.g. API 33+ on Android 15, API 34+ on Android 16).
+- APK Manager is the installer of record (or update owner on Android 14+) of the app being updated, or the app is APK Manager itself, and
+- the app being updated targets a recent enough API level: 29 on Android 12, 30 on 13, 31 on 14, and from Android 15 on two versions below the device's (33 on 15, 34 on 16).
 
-In practice, the first update of an app installed by another source needs one confirmation. After that, updates can run unattended. With Shizuku or root, all updates can be unattended.
-
-Background checks run as unique periodic WorkManager work with network and battery constraints. Downloads run as separate work, so a check stays cheap.
+`UnattendedUpdates.isPossible` mirrors these rules so the UI can tell the user up front; Android may still ask, which the install pipeline handles. In practice, the first update of an app installed by another source needs one confirmation. After that, updates can run unattended. With Shizuku or root (planned), all updates can be unattended.
 
 ## Android developer verification
 
