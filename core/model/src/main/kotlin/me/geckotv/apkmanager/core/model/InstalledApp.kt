@@ -9,4 +9,11 @@ data class InstalledApp(
     val versionCode: Long,
     /** Whether the app is part of the system image (including updated system apps). */
     val isSystemApp: Boolean,
+    /** The Android API level the app targets. */
+    val targetSdkVersion: Int = 0,
+    /**
+     * Package name of the app that installs updates of this app without asking: the update owner
+     * (Android 14+) or else the app that installed it. `null` if unknown.
+     */
+    val installerPackageName: String? = null,
 )

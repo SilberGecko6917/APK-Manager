@@ -62,4 +62,10 @@ data class TrackedAppEntity(
     /** GitHub ID of a release the user chose to skip. */
     @ColumnInfo(name = "skipped_release_id")
     val skippedReleaseId: Long? = null,
+    /** Name of the app's update policy, `null` to follow the default in the settings. */
+    @ColumnInfo(name = "update_policy")
+    val updatePolicy: String? = null,
+    /** GitHub ID of the release APK Manager last tried to install automatically. */
+    @ColumnInfo(name = "auto_update_release_id")
+    val autoUpdateReleaseId: Long? = null,
 )

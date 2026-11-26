@@ -17,6 +17,12 @@ data class UserSettings(
     val checkInterval: UpdateCheckInterval = UpdateCheckInterval.Every12Hours,
     /** Whether background checks only run on unmetered networks (usually Wi-Fi). */
     val checkOnlyOnUnmeteredNetwork: Boolean = false,
+    /** What to do with updates of apps that have no [TrackedApp.updatePolicy] of their own. */
+    val defaultUpdatePolicy: UpdatePolicy = UpdatePolicy.Notify,
+    /** Whether automatic updates wait for an unmetered network (usually Wi-Fi). */
+    val autoUpdateOnlyOnUnmeteredNetwork: Boolean = true,
+    /** Whether automatic updates wait until the device is charging. */
+    val autoUpdateOnlyWhileCharging: Boolean = false,
 )
 
 /** How often APK Manager checks for updates in the background. */

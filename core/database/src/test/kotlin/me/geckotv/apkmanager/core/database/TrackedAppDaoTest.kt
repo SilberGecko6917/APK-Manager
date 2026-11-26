@@ -129,6 +129,8 @@ class TrackedAppDaoTest {
             dao.setAssetFilter(id, include = "foss", exclude = "debug")
             dao.setVersionPattern(id, pattern = "(\\d+)")
             dao.setSkippedRelease(id, releaseId = 9)
+            dao.setUpdatePolicy(id, policy = "Install")
+            dao.setAutoUpdateRelease(id, releaseId = 10)
 
             val app = dao.getTrackedApp(id)!!
             assertEquals("com.example.app", app.packageName)
@@ -141,6 +143,8 @@ class TrackedAppDaoTest {
             assertEquals("debug", app.assetExcludePattern)
             assertEquals("(\\d+)", app.versionPattern)
             assertEquals(9L, app.skippedReleaseId)
+            assertEquals("Install", app.updatePolicy)
+            assertEquals(10L, app.autoUpdateReleaseId)
 
             dao.setInstalledRelease(id, releaseId = 11, versionCode = 42)
 

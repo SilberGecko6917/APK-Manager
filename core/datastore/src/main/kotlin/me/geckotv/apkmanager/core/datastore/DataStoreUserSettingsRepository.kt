@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.model.UserSettings
 import java.io.IOException
 import javax.inject.Inject
@@ -66,27 +67,44 @@ internal class DataStoreUserSettingsRepository
             dataStore.edit { it[Keys.CHECK_ONLY_ON_UNMETERED_NETWORK] = checkOnlyOnUnmeteredNetwork }
         }
 
+        override suspend fun setDefaultUpdatePolicy(defaultUpdatePolicy: UpdatePolicy) {
+            dataStore.edit { it[Keys.DEFAULT_UPDATE_POLICY] = defaultUpdatePolicy.name }
+        }
+
+        override suspend fun setAutoUpdateOnlyOnUnmeteredNetwork(autoUpdateOnlyOnUnmeteredNetwork: Boolean) {
+            dataStore.edit { it[Keys.AUTO_UPDATE_ONLY_ON_UNMETERED_NETWORK] = autoUpdateOnlyOnUnmeteredNetwork }
+        }
+
+        override suspend fun setAutoUpdateOnlyWhileCharging(autoUpdateOnlyWhileCharging: Boolean) {
+            dataStore.edit { it[Keys.AUTO_UPDATE_ONLY_WHILE_CHARGING] = autoUpdateOnlyWhileCharging }
+        }
+
         private fun Preferences.toUserSettings(): UserSettings {
             val defaults = UserSettings()
             return UserSettings(
-                themeMode =
-                    this[Keys.THEME_MODE]
-                        ?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } }
-                        ?: defaults.themeMode,
+                themeMode = enumValue(Keys.THEME_MODE, defaults.themeMode),
                 useDynamicColor = this[Keys.USE_DYNAMIC_COLOR] ?: defaults.useDynamicColor,
                 useAmoledBlack = this[Keys.USE_AMOLED_BLACK] ?: defaults.useAmoledBlack,
                 hapticsEnabled = this[Keys.HAPTICS_ENABLED] ?: defaults.hapticsEnabled,
                 onboardingCompleted = this[Keys.ONBOARDING_COMPLETED] ?: defaults.onboardingCompleted,
                 selfUpdatesTracked = this[Keys.SELF_UPDATES_TRACKED] ?: defaults.selfUpdatesTracked,
                 backgroundChecksEnabled = this[Keys.BACKGROUND_CHECKS_ENABLED] ?: defaults.backgroundChecksEnabled,
-                checkInterval =
-                    this[Keys.CHECK_INTERVAL]
-                        ?.let { name -> UpdateCheckInterval.entries.firstOrNull { it.name == name } }
-                        ?: defaults.checkInterval,
+                checkInterval = enumValue(Keys.CHECK_INTERVAL, defaults.checkInterval),
                 checkOnlyOnUnmeteredNetwork =
                     this[Keys.CHECK_ONLY_ON_UNMETERED_NETWORK] ?: defaults.checkOnlyOnUnmeteredNetwork,
+                defaultUpdatePolicy = enumValue(Keys.DEFAULT_UPDATE_POLICY, defaults.defaultUpdatePolicy),
+                autoUpdateOnlyOnUnmeteredNetwork =
+                    this[Keys.AUTO_UPDATE_ONLY_ON_UNMETERED_NETWORK] ?: defaults.autoUpdateOnlyOnUnmeteredNetwork,
+                autoUpdateOnlyWhileCharging =
+                    this[Keys.AUTO_UPDATE_ONLY_WHILE_CHARGING] ?: defaults.autoUpdateOnlyWhileCharging,
             )
         }
+
+        /** The enum constant stored under [key], or [default] if none or an unknown one is stored. */
+        private inline fun <reified E : Enum<E>> Preferences.enumValue(
+            key: Preferences.Key<String>,
+            default: E,
+        ): E = this[key]?.let { name -> enumValues<E>().firstOrNull { it.name == name } } ?: default
 
         private object Keys {
             val THEME_MODE = stringPreferencesKey("theme_mode")
@@ -98,5 +116,8 @@ internal class DataStoreUserSettingsRepository
             val BACKGROUND_CHECKS_ENABLED = booleanPreferencesKey("background_checks_enabled")
             val CHECK_INTERVAL = stringPreferencesKey("check_interval")
             val CHECK_ONLY_ON_UNMETERED_NETWORK = booleanPreferencesKey("check_only_on_unmetered_network")
+            val DEFAULT_UPDATE_POLICY = stringPreferencesKey("default_update_policy")
+            val AUTO_UPDATE_ONLY_ON_UNMETERED_NETWORK = booleanPreferencesKey("auto_update_only_on_unmetered_network")
+            val AUTO_UPDATE_ONLY_WHILE_CHARGING = booleanPreferencesKey("auto_update_only_while_charging")
         }
     }

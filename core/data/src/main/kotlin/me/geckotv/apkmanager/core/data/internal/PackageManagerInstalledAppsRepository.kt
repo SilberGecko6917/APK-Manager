@@ -30,7 +30,10 @@ import me.geckotv.apkmanager.core.model.InstalledApp
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** [InstalledAppsRepository] backed by [PackageManager] and package broadcasts. */
+/**
+ * [InstalledAppsRepository] backed by [PackageManager] and package broadcasts. Only [installedApp] reads
+ * which app installs updates of a package, which takes one more call per package.
+ */
 @Singleton
 internal class PackageManagerInstalledAppsRepository
     @Inject
@@ -70,7 +73,10 @@ internal class PackageManagerInstalledAppsRepository
         override suspend fun installedApp(packageName: String): InstalledApp? =
             withContext(ioDispatcher) {
                 try {
-                    packageManager.packageInfo(packageName).toInstalledApp()
+                    packageManager
+                        .packageInfo(packageName)
+                        .toInstalledApp()
+                        ?.copy(installerPackageName = packageManager.updateInstaller(packageName))
                 } catch (_: PackageManager.NameNotFoundException) {
                     null
                 }
@@ -94,8 +100,36 @@ internal class PackageManagerInstalledAppsRepository
                 versionName = versionName,
                 versionCode = PackageInfoCompat.getLongVersionCode(this),
                 isSystemApp = applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0,
+                targetSdkVersion = applicationInfo.targetSdkVersion,
             )
         }
+
+        /**
+         * The app that may update [packageName] without asking: its update owner (Android 14+), else the
+         * app that installed it.
+         */
+        private fun PackageManager.updateInstaller(packageName: String): String? =
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    val source = getInstallSourceInfo(packageName)
+                    val owner =
+                        if (Build.VERSION.SDK_INT >=
+                            Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+                        ) {
+                            source.updateOwnerPackageName
+                        } else {
+                            null
+                        }
+                    owner ?: source.installingPackageName
+                } else {
+                    @Suppress("DEPRECATION")
+                    getInstallerPackageName(packageName)
+                }
+            } catch (_: PackageManager.NameNotFoundException) {
+                null
+            } catch (_: IllegalArgumentException) {
+                null
+            }
 
         private fun PackageManager.packageInfo(packageName: String): PackageInfo =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

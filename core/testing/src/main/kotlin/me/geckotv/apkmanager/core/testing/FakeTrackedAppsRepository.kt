@@ -14,6 +14,7 @@ import me.geckotv.apkmanager.core.model.RepositoryPreview
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
 import me.geckotv.apkmanager.core.model.TrackedApp
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import java.time.Instant
 
 /**
@@ -146,6 +147,20 @@ class FakeTrackedAppsRepository(
         releaseId: Long?,
     ) {
         update(id) { it.copy(skippedReleaseId = releaseId) }
+    }
+
+    override suspend fun setUpdatePolicy(
+        id: Long,
+        policy: UpdatePolicy?,
+    ) {
+        update(id) { it.copy(updatePolicy = policy) }
+    }
+
+    override suspend fun setAutoUpdateRelease(
+        id: Long,
+        releaseId: Long,
+    ) {
+        update(id) { it.copy(autoUpdateReleaseId = releaseId) }
     }
 
     override suspend fun setNotifiedRelease(

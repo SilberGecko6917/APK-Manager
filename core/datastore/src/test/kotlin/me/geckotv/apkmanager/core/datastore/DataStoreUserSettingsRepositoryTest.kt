@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.model.UserSettings
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -49,6 +50,9 @@ class DataStoreUserSettingsRepositoryTest {
             repository.setBackgroundChecksEnabled(false)
             repository.setCheckInterval(UpdateCheckInterval.Every24Hours)
             repository.setCheckOnlyOnUnmeteredNetwork(true)
+            repository.setDefaultUpdatePolicy(UpdatePolicy.Install)
+            repository.setAutoUpdateOnlyOnUnmeteredNetwork(false)
+            repository.setAutoUpdateOnlyWhileCharging(true)
 
             repository.settings.test {
                 assertEquals(
@@ -62,6 +66,9 @@ class DataStoreUserSettingsRepositoryTest {
                         backgroundChecksEnabled = false,
                         checkInterval = UpdateCheckInterval.Every24Hours,
                         checkOnlyOnUnmeteredNetwork = true,
+                        defaultUpdatePolicy = UpdatePolicy.Install,
+                        autoUpdateOnlyOnUnmeteredNetwork = false,
+                        autoUpdateOnlyWhileCharging = true,
                     ),
                     awaitItem(),
                 )

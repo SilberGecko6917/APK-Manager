@@ -84,4 +84,27 @@ class AndroidUpdateNotifierTest {
 
             assertTrue(shadowOf(notificationManager).allNotifications.isEmpty())
         }
+
+    @Test
+    fun autoUpdates_areNotifiedPerApp() =
+        runTest {
+            val repository = FakeTrackedAppsRepository(emptyList())
+
+            AndroidUpdateNotifier(context, repository).notifyAutoUpdates(
+                listOf(AutoUpdate(1, "Notes", "2.0.0"), AutoUpdate(2, "Player", "1.1.0")),
+            )
+
+            val notifications = shadowOf(notificationManager).allNotifications
+            assertEquals(3, notifications.size) // two apps and the group summary
+            assertTrue(notifications.any { shadowOf(it).contentTitle == "Notes was updated" })
+            assertTrue(notifications.any { shadowOf(it).contentText == "Now on 1.1.0" })
+        }
+
+    @Test
+    fun noAutoUpdates_postNothing() =
+        runTest {
+            AndroidUpdateNotifier(context, FakeTrackedAppsRepository(emptyList())).notifyAutoUpdates(emptyList())
+
+            assertTrue(shadowOf(notificationManager).allNotifications.isEmpty())
+        }
 }

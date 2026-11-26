@@ -15,6 +15,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import me.geckotv.apkmanager.core.data.repository.TrackedAppsRepository
 import me.geckotv.apkmanager.core.model.TrackedApp
 import me.geckotv.apkmanager.core.model.UpdateStatus
+import me.geckotv.apkmanager.core.work.AutoUpdate
 import me.geckotv.apkmanager.core.work.R
 import me.geckotv.apkmanager.core.work.UpdateNotifier
 import javax.inject.Inject
@@ -47,6 +48,49 @@ internal class AndroidUpdateNotifier
                 notificationManager.notify(SUMMARY_ID, summaryNotification(withUpdates.size))
             }
         }
+
+        @SuppressLint("MissingPermission") // Checked by canNotify().
+        override suspend fun notifyAutoUpdates(updates: List<AutoUpdate>) {
+            if (updates.isEmpty() || !canNotify()) return
+            notificationManager.createNotificationChannel(
+                NotificationChannelCompat
+                    .Builder(AUTO_UPDATES_CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_LOW)
+                    .setName(context.getString(R.string.core_work_channel_auto_updates))
+                    .setDescription(context.getString(R.string.core_work_channel_auto_updates_description))
+                    .build(),
+            )
+            updates.forEach { update ->
+                notificationManager.notify(
+                    (update.appId % Int.MAX_VALUE).toInt() + AUTO_UPDATE_ID_OFFSET,
+                    autoUpdateNotification(update),
+                )
+            }
+            notificationManager.notify(AUTO_UPDATES_SUMMARY_ID, autoUpdatesSummary())
+        }
+
+        private fun autoUpdateNotification(update: AutoUpdate) =
+            NotificationCompat
+                .Builder(context, AUTO_UPDATES_CHANNEL_ID)
+                .setSmallIcon(R.drawable.core_work_ic_notification)
+                .setContentTitle(context.getString(R.string.core_work_auto_update_title, update.appName))
+                .setContentText(context.getString(R.string.core_work_auto_update_text, update.versionName))
+                .setContentIntent(openAppIntent())
+                .setAutoCancel(true)
+                .setGroup(AUTO_UPDATES_GROUP_KEY)
+                .setCategory(NotificationCompat.CATEGORY_STATUS)
+                .build()
+
+        /** Summary of the group; Android shows it only while there are several notifications. */
+        private fun autoUpdatesSummary() =
+            NotificationCompat
+                .Builder(context, AUTO_UPDATES_CHANNEL_ID)
+                .setSmallIcon(R.drawable.core_work_ic_notification)
+                .setContentTitle(context.getString(R.string.core_work_auto_updates_summary))
+                .setContentIntent(openAppIntent())
+                .setAutoCancel(true)
+                .setGroup(AUTO_UPDATES_GROUP_KEY)
+                .setGroupSummary(true)
+                .build()
 
         private fun canNotify(): Boolean {
             val permitted =
@@ -115,5 +159,9 @@ internal class AndroidUpdateNotifier
             const val GROUP_KEY = "me.geckotv.apkmanager.UPDATES"
             const val SUMMARY_ID = 1
             const val APP_ID_OFFSET = 1_000
+            const val AUTO_UPDATES_CHANNEL_ID = "auto_updates"
+            const val AUTO_UPDATES_GROUP_KEY = "me.geckotv.apkmanager.AUTO_UPDATES"
+            const val AUTO_UPDATES_SUMMARY_ID = 3
+            const val AUTO_UPDATE_ID_OFFSET = 200_000
         }
     }
