@@ -1,8 +1,10 @@
 package me.geckotv.apkmanager.feature.apps.details
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -13,7 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import me.geckotv.apkmanager.core.designsystem.theme.ApkManagerTheme
 import me.geckotv.apkmanager.core.installer.InstallState
+import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.GitHubRepository
+import me.geckotv.apkmanager.core.model.InstalledRelease
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.TrackedApp
@@ -40,6 +44,48 @@ class AppDetailsScreenshotTest {
     @Test
     fun detailsUpdateAvailableDark() =
         capture("app_details_update_dark", darkTheme = true) { Details(updateAvailable()) }
+
+    @Test
+    fun detailsSkippedLight() = capture("app_details_skipped_light", darkTheme = false) { Details(skipped()) }
+
+    @Test
+    fun detailsSkippedDark() = capture("app_details_skipped_dark", darkTheme = true) { Details(skipped()) }
+
+    @Test
+    @Config(qualifiers = "w411dp-h700dp-xxhdpi")
+    fun assetFilterSheetLight() =
+        capture(
+            "app_details_asset_filter_light",
+            darkTheme = false,
+        ) { AssetFilterSheet(include = "foss", exclude = "debug") }
+
+    @Test
+    @Config(qualifiers = "w411dp-h700dp-xxhdpi")
+    fun assetFilterSheetDark() =
+        capture(
+            "app_details_asset_filter_dark",
+            darkTheme = true,
+        ) { AssetFilterSheet(include = "foss", exclude = "debug") }
+
+    @Test
+    @Config(qualifiers = "w411dp-h700dp-xxhdpi")
+    fun assetFilterSheetInvalidLight() =
+        capture("app_details_asset_filter_invalid_light", darkTheme = false) {
+            AssetFilterSheet(include = "foss", exclude = "(debug")
+        }
+
+    @Test
+    @Config(qualifiers = "w411dp-h580dp-xxhdpi")
+    fun versionPatternSheetLight() =
+        capture(
+            "app_details_version_pattern_light",
+            darkTheme = false,
+        ) { VersionPatternSheet(pattern = "release-(.*)") }
+
+    @Test
+    @Config(qualifiers = "w411dp-h580dp-xxhdpi")
+    fun versionPatternSheetDark() =
+        capture("app_details_version_pattern_dark", darkTheme = true) { VersionPatternSheet(pattern = "release-(.*)") }
 
     @Test
     fun detailsDownloadingLight() =
@@ -119,9 +165,64 @@ class AppDetailsScreenshotTest {
             onRemoveClick = {},
             onRemoveConfirm = {},
             onRemoveDismiss = {},
+            options = AppDetailsOptionsActions(),
             showProgressIndicator = false,
         )
     }
+
+    @Composable
+    private fun AssetFilterSheet(
+        include: String,
+        exclude: String,
+    ) {
+        SheetSurface {
+            AssetFilterSheetContent(
+                filter = AssetFilter(include, exclude),
+                release = apkRelease(),
+                supportedAbis = listOf("arm64-v8a", "armeabi-v7a", "armeabi"),
+                preferredAssetName = null,
+                onSaveClick = { _, _ -> },
+                onCancelClick = {},
+            )
+        }
+    }
+
+    @Composable
+    private fun VersionPatternSheet(pattern: String) {
+        val releases =
+            listOf("release-1.2.0", "release-1.1.0", "nightly", "release-1.0.1", "v1.0.0")
+                .mapIndexed { index, tag -> release(index + 1L, tag, tag, notes = null) }
+        SheetSurface {
+            VersionPatternSheetContent(
+                pattern = pattern,
+                tags = previewTags(releases.first(), releases),
+                onSaveClick = {},
+                onCancelClick = {},
+            )
+        }
+    }
+
+    /** What a bottom sheet shows around its content. */
+    @Composable
+    private fun SheetSurface(content: @Composable () -> Unit) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+            Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp)) { content() }
+        }
+    }
+
+    /** A release with one APK per ABI and flavor. */
+    private fun apkRelease(): Release =
+        release(HISTORY_LATEST_ID, "v1.2.0", "Spring update", notes = null).copy(
+            assets =
+                listOf(
+                    "octo-app-play-arm64-v8a.apk",
+                    "octo-app-foss-x86_64.apk",
+                    "octo-app-foss-armeabi-v7a.apk",
+                    "octo-app-foss-arm64-v8a.apk",
+                    "octo-app-foss-arm64-v8a-debug.apk",
+                    "octo-app-foss-arm64-v8a.apk.sha256",
+                ).mapIndexed { index, name -> TestData.asset(index + 1L, name) },
+        )
 
     /** The apps list with, next to it, the details of [selected] or the placeholder. */
     @Composable
@@ -168,6 +269,22 @@ class AppDetailsScreenshotTest {
         expandedReleaseId = HISTORY_EXPANDED_ID,
     )
 
+    /** The update is skipped; the app is installed through APK Manager and has options set. */
+    private fun skipped() =
+        updateAvailable().let { state ->
+            state.copy(
+                item =
+                    state.item.copy(
+                        app =
+                            state.item.app.copy(
+                                skippedReleaseId = HISTORY_LATEST_ID,
+                                assetFilter = AssetFilter(include = "foss", exclude = "debug"),
+                                versionPattern = "v(.*)",
+                            ),
+                    ),
+            )
+        }
+
     private fun notInstalled() =
         AppDetailsUiState.Ready(
             item = AppItem(app = notInstalledApp(), hasCompatibleApk = true),
@@ -178,13 +295,14 @@ class AppDetailsScreenshotTest {
         )
 
     private fun app(): TrackedApp =
-        TestData.trackedApp(
-            id = 1,
-            repository = GitHubRepository("octo", "octo-app"),
-            latestRelease = history().first(),
-            installedApp = TestData.installedApp("org.example.octoapp", "Octo App", "1.1.0"),
-            includePrereleases = true,
-        )
+        TestData
+            .trackedApp(
+                id = 1,
+                repository = GitHubRepository("octo", "octo-app"),
+                latestRelease = history().first(),
+                installedApp = TestData.installedApp("org.example.octoapp", "Octo App", "1.1.0"),
+                includePrereleases = true,
+            ).copy(installedRelease = InstalledRelease(releaseId = HISTORY_INSTALLED_ID, versionCode = 1))
 
     private fun notInstalledApp(): TrackedApp =
         TestData
@@ -220,6 +338,7 @@ class AppDetailsScreenshotTest {
     private companion object {
         const val HISTORY_LATEST_ID = 5L
         const val HISTORY_EXPANDED_ID = 4L
+        const val HISTORY_INSTALLED_ID = 3L
         const val SECONDS_PER_WEEK = 7 * 24 * 3600L
 
         val SHORT_NOTES =

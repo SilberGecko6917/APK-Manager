@@ -11,11 +11,13 @@ import kotlinx.coroutines.test.runTest
 import me.geckotv.apkmanager.core.data.repository.TrackedAppsRepository
 import me.geckotv.apkmanager.core.data.repository.UpdateCheckResult
 import me.geckotv.apkmanager.core.installer.InstallState
+import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.GitHubRepository
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
 import me.geckotv.apkmanager.core.model.TrackedApp
+import me.geckotv.apkmanager.core.model.UpdateStatus
 import me.geckotv.apkmanager.core.testing.FakeAppInstaller
 import me.geckotv.apkmanager.core.testing.FakeDeviceInfo
 import me.geckotv.apkmanager.core.testing.FakeInstalledAppsRepository
@@ -255,6 +257,163 @@ class AppDetailsViewModelTest {
                 viewModel
                     .ready()
                     .item.app.packageName,
+            )
+        }
+
+    @Test
+    fun skippingTheLatestReleaseHidesTheUpdate() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            assertEquals(InstallAction.Update, viewModel.ready().item.installAction)
+
+            viewModel.skipLatestRelease()
+
+            val app = viewModel.ready().item.app
+            assertEquals(1L, app.skippedReleaseId)
+            assertEquals(UpdateStatus.UpToDate, app.updateStatus)
+            assertNull(viewModel.ready().item.installAction)
+        }
+
+    @Test
+    fun undoingTheSkipBringsTheUpdateBack() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            viewModel.skipLatestRelease()
+
+            viewModel.undoSkip()
+
+            assertNull(
+                viewModel
+                    .ready()
+                    .item.app.skippedReleaseId,
+            )
+            assertEquals(InstallAction.Update, viewModel.ready().item.installAction)
+        }
+
+    @Test
+    fun theAssetFilterSheetOpensWithTheDeviceAbis() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            assertNull(viewModel.ready().optionsSheet)
+
+            viewModel.showAssetFilter()
+            assertEquals(OptionsSheet.AssetFilterSheet(deviceInfo.supportedAbis), viewModel.ready().optionsSheet)
+
+            viewModel.dismissOptionsSheet()
+            assertNull(viewModel.ready().optionsSheet)
+        }
+
+    @Test
+    fun savingTheAssetFilterChangesWhichApkCounts() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            viewModel.showAssetFilter()
+
+            viewModel.saveAssetFilter(include = " foss ", exclude = "")
+
+            assertEquals(
+                AssetFilter(include = "foss", exclude = null),
+                viewModel
+                    .ready()
+                    .item.app.assetFilter,
+            )
+            assertFalse(viewModel.ready().item.hasCompatibleApk)
+            assertNull(viewModel.ready().optionsSheet)
+        }
+
+    @Test
+    fun anInvalidAssetFilterIsNotSaved() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            viewModel.showAssetFilter()
+
+            viewModel.saveAssetFilter(include = "foss", exclude = "(debug")
+
+            assertTrue(
+                viewModel
+                    .ready()
+                    .item.app.assetFilter.isEmpty,
+            )
+            assertTrue(viewModel.ready().optionsSheet is OptionsSheet.AssetFilterSheet)
+        }
+
+    @Test
+    fun savingBlankPatternsResetsTheAssetFilter() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            viewModel.saveAssetFilter(include = "foss", exclude = "debug")
+            assertFalse(
+                viewModel
+                    .ready()
+                    .item.app.assetFilter.isEmpty,
+            )
+
+            viewModel.saveAssetFilter(include = "", exclude = "  ")
+
+            assertEquals(
+                AssetFilter(),
+                viewModel
+                    .ready()
+                    .item.app.assetFilter,
+            )
+            assertTrue(viewModel.ready().item.hasCompatibleApk)
+        }
+
+    @Test
+    fun savingTheVersionPatternChangesHowTagsAreRead() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            viewModel.showVersionPattern()
+            assertEquals(OptionsSheet.VersionPatternSheet, viewModel.ready().optionsSheet)
+
+            viewModel.saveVersionPattern(" v(.*) ")
+
+            assertEquals(
+                "v(.*)",
+                viewModel
+                    .ready()
+                    .item.app.versionPattern,
+            )
+            assertNull(viewModel.ready().optionsSheet)
+        }
+
+    @Test
+    fun anInvalidVersionPatternIsNotSaved() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            viewModel.showVersionPattern()
+
+            viewModel.saveVersionPattern("v(")
+
+            assertNull(
+                viewModel
+                    .ready()
+                    .item.app.versionPattern,
+            )
+            assertEquals(OptionsSheet.VersionPatternSheet, viewModel.ready().optionsSheet)
+        }
+
+    @Test
+    fun savingABlankVersionPatternResetsIt() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            viewModel.saveVersionPattern("v(.*)")
+
+            viewModel.saveVersionPattern("")
+
+            assertNull(
+                viewModel
+                    .ready()
+                    .item.app.versionPattern,
             )
         }
 

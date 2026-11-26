@@ -139,6 +139,10 @@ private fun TrackedApp.statusText(): String {
             stringResource(R.string.feature_apps_status_no_release)
         }
 
+        hasSkippedLatestRelease && updateStatus == UpdateStatus.UpToDate -> {
+            stringResource(R.string.feature_apps_status_skipped, tag)
+        }
+
         updateStatus == UpdateStatus.UpdateAvailable -> {
             stringResource(R.string.feature_apps_status_update_available, installedVersion, tag)
         }

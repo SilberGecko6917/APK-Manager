@@ -18,11 +18,13 @@ import me.geckotv.apkmanager.core.database.model.TrackedAppEntity
         LatestReleaseEntity::class,
         ReleaseAssetEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
     autoMigrations = [
         // 2: tracked_apps.notified_release_id
         AutoMigration(from = 1, to = 2),
+        // 3: asset filter, version pattern, installed and skipped release
+        AutoMigration(from = 2, to = 3),
     ],
 )
 abstract class ApkManagerDatabase : RoomDatabase() {

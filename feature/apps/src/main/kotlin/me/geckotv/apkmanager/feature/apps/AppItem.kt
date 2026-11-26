@@ -2,6 +2,7 @@ package me.geckotv.apkmanager.feature.apps
 
 import me.geckotv.apkmanager.core.installer.InstallState
 import me.geckotv.apkmanager.core.model.ApkAssets
+import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.TrackedApp
 import me.geckotv.apkmanager.core.model.UpdateStatus
 
@@ -48,5 +49,13 @@ internal fun TrackedApp.toItem(
         app = this,
         install = installs[id]?.takeIf { it.isActive },
         hasCompatibleApk =
-            latestRelease?.let { ApkAssets.select(it.assets, supportedAbis, preferredAssetName) } != null,
+            latestRelease?.let { ApkAssets.select(it.assets, supportedAbis, preferredAssetName, assetFilter) } != null,
     )
+
+/** Whether the user skipped the latest release, which then does not count as an update. */
+internal val TrackedApp.hasSkippedLatestRelease: Boolean
+    get() = skippedReleaseId != null && skippedReleaseId == latestRelease?.id
+
+/** Whether [release] is the one APK Manager installed and the installed app is still that APK. */
+internal fun TrackedApp.isInstalledRelease(release: Release): Boolean =
+    installedRelease?.let { it.releaseId == release.id && it.versionCode == installedApp?.versionCode } == true

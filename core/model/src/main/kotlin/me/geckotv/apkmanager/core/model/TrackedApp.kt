@@ -33,8 +33,23 @@ data class TrackedApp(
     val lastCheckedAt: Instant?,
     /** GitHub ID of the release the user was last notified about, `null` if none. */
     val notifiedReleaseId: Long? = null,
+    /** Which release assets count for this app. */
+    val assetFilter: AssetFilter = AssetFilter(),
+    /** Regular expression that extracts the version from a release tag, see [versionFromTag]. */
+    val versionPattern: String? = null,
+    /** The release APK Manager installed, `null` if it did not install the app. */
+    val installedRelease: InstalledRelease? = null,
+    /** GitHub ID of a release the user chose to skip; it does not count as an update. */
+    val skippedReleaseId: Long? = null,
 ) {
     /** Whether an update is available, see [UpdateStatus]. */
     val updateStatus: UpdateStatus
-        get() = UpdateStatus.of(installedApp = installedApp, latestRelease = latestRelease)
+        get() =
+            UpdateStatus.of(
+                installedApp = installedApp,
+                latestRelease = latestRelease,
+                installedRelease = installedRelease,
+                versionPattern = versionPattern,
+                skippedReleaseId = skippedReleaseId,
+            )
 }

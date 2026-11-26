@@ -20,7 +20,9 @@ import me.geckotv.apkmanager.core.installer.internal.PackageInspector
 import me.geckotv.apkmanager.core.installer.internal.SessionResult
 import me.geckotv.apkmanager.core.installer.internal.SystemInstaller
 import me.geckotv.apkmanager.core.installer.internal.sha256
+import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.GitHubRepository
+import me.geckotv.apkmanager.core.model.InstalledRelease
 import me.geckotv.apkmanager.core.model.ReleaseAsset
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.testing.FakeDeviceInfo
@@ -74,6 +76,30 @@ class DefaultAppInstallerTest {
             assertEquals(listOf(asset.id), downloader.downloadedAssetIds)
             assertEquals("com.example.app", systemInstaller.installedPackageName)
             assertFalse("The download is deleted", downloader.lastFile!!.exists())
+        }
+
+    @Test
+    fun install_remembersTheInstalledRelease() =
+        runTest {
+            val installer = installer()
+
+            installer.install(app)
+
+            assertEquals(
+                InstalledRelease(releaseId = 1, versionCode = 2),
+                repository.trackedApps.single().installedRelease,
+            )
+        }
+
+    @Test
+    fun install_respectsTheAssetFilter() =
+        runTest {
+            val filtered = app.copy(assetFilter = AssetFilter(exclude = "arm64"))
+            val installer = installer()
+
+            installer.install(filtered)
+
+            assertEquals(InstallState.Failed(InstallFailure.NoCompatibleApk), installer.installs.value[1])
         }
 
     @Test

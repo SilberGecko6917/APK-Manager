@@ -216,4 +216,19 @@ class ApkAssetsTest {
             assertFalse("$a !~ $b", ApkAssets.matchesPreferred(a, b))
         }
     }
+
+    @Test
+    fun filterLeavesOutAssetsThatDoNotMatch() {
+        val assets =
+            listOf(asset("app-gplay-arm64-v8a.apk"), asset("app-foss-arm64-v8a.apk"), asset("app-foss-debug.apk"))
+        val filter = AssetFilter(include = "foss", exclude = "debug")
+
+        assertEquals(
+            listOf("app-foss-arm64-v8a.apk"),
+            ApkAssets.candidates(assets, listOf("arm64-v8a"), filter).map {
+                it.asset.name
+            },
+        )
+        assertEquals("app-foss-arm64-v8a.apk", ApkAssets.select(assets, listOf("arm64-v8a"), null, filter)?.name)
+    }
 }

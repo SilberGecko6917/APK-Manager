@@ -6,7 +6,9 @@ import kotlinx.coroutines.flow.map
 import me.geckotv.apkmanager.core.data.repository.AddAppOptions
 import me.geckotv.apkmanager.core.data.repository.TrackedAppsRepository
 import me.geckotv.apkmanager.core.data.repository.UpdateCheckResult
+import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.GitHubRepository
+import me.geckotv.apkmanager.core.model.InstalledRelease
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.RepositoryPreview
 import me.geckotv.apkmanager.core.model.SourceError
@@ -115,6 +117,35 @@ class FakeTrackedAppsRepository(
         assetName: String?,
     ) {
         update(id) { it.copy(preferredAssetName = assetName) }
+    }
+
+    override suspend fun setAssetFilter(
+        id: Long,
+        filter: AssetFilter,
+    ) {
+        update(id) { it.copy(assetFilter = filter) }
+    }
+
+    override suspend fun setVersionPattern(
+        id: Long,
+        pattern: String?,
+    ) {
+        update(id) { it.copy(versionPattern = pattern) }
+    }
+
+    override suspend fun setInstalledRelease(
+        id: Long,
+        releaseId: Long,
+        versionCode: Long,
+    ) {
+        update(id) { it.copy(installedRelease = InstalledRelease(releaseId, versionCode), skippedReleaseId = null) }
+    }
+
+    override suspend fun setSkippedRelease(
+        id: Long,
+        releaseId: Long?,
+    ) {
+        update(id) { it.copy(skippedReleaseId = releaseId) }
     }
 
     override suspend fun setNotifiedRelease(

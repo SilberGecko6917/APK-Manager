@@ -23,6 +23,7 @@ import me.geckotv.apkmanager.core.data.repository.InstalledAppsRepository
 import me.geckotv.apkmanager.core.data.repository.TrackedAppsRepository
 import me.geckotv.apkmanager.core.installer.AppInstaller
 import me.geckotv.apkmanager.core.installer.InstallState
+import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.InstalledApp
 import me.geckotv.apkmanager.core.model.SourceResult
 import me.geckotv.apkmanager.feature.apps.toItem
@@ -30,7 +31,7 @@ import me.geckotv.apkmanager.feature.apps.toMessage
 
 /**
  * The details of the tracked app [appId]: its latest release, its release history and the actions
- * to install it, to change its settings and to stop tracking it.
+ * to install it, to skip a release, to change its settings and options and to stop tracking it.
  *
  * It has one function per action of the screen; splitting it would only scatter them.
  */
@@ -72,6 +73,7 @@ class AppDetailsViewModel
                         installedApps = local.installedApps,
                         isConfirmingRemove = local.isConfirmingRemove,
                         expandedReleaseId = local.expandedReleaseId,
+                        optionsSheet = local.optionsSheet,
                     )
                 }
             }.stateIn(
@@ -120,6 +122,66 @@ class AppDetailsViewModel
                     .toMessage()
                     ?.let { eventChannel.send(AppDetailsEvent.ShowMessage(it)) }
             }
+        }
+
+        /** Skips the latest release, so it does not count as an update. */
+        fun skipLatestRelease() {
+            viewModelScope.launch {
+                val releaseId =
+                    trackedAppsRepository
+                        .observeTrackedApp(appId)
+                        .first()
+                        ?.latestRelease
+                        ?.id
+                if (releaseId != null) trackedAppsRepository.setSkippedRelease(appId, releaseId)
+            }
+        }
+
+        /** Stops skipping the release that was skipped. */
+        fun undoSkip() {
+            viewModelScope.launch { trackedAppsRepository.setSkippedRelease(appId, null) }
+        }
+
+        /** Shows the sheet to edit which APKs of a release count. */
+        fun showAssetFilter() {
+            localState.update { it.copy(optionsSheet = OptionsSheet.AssetFilterSheet(deviceInfo.supportedAbis)) }
+        }
+
+        /**
+         * Saves the APK filter: assets must match [include] and must not match [exclude]; a blank pattern
+         * does not filter. Nothing is saved if a pattern is not a valid regular expression.
+         */
+        fun saveAssetFilter(
+            include: String,
+            exclude: String,
+        ) {
+            val includePattern = include.trim().ifEmpty { null }
+            val excludePattern = exclude.trim().ifEmpty { null }
+            if (includePattern.isInvalidPattern() || excludePattern.isInvalidPattern()) return
+            val filter = AssetFilter(includePattern, excludePattern)
+            dismissOptionsSheet()
+            viewModelScope.launch { trackedAppsRepository.setAssetFilter(appId, filter) }
+        }
+
+        /** Shows the sheet to edit how the version is read from a release tag. */
+        fun showVersionPattern() {
+            localState.update { it.copy(optionsSheet = OptionsSheet.VersionPatternSheet) }
+        }
+
+        /**
+         * Saves the pattern that extracts the version from release tags; a blank [pattern] reads the
+         * tag as it is. Nothing is saved if the pattern is not a valid regular expression.
+         */
+        fun saveVersionPattern(pattern: String) {
+            val trimmed = pattern.trim().ifEmpty { null }
+            if (trimmed.isInvalidPattern()) return
+            dismissOptionsSheet()
+            viewModelScope.launch { trackedAppsRepository.setVersionPattern(appId, trimmed) }
+        }
+
+        /** Closes the sheet to edit an advanced option without saving. */
+        fun dismissOptionsSheet() {
+            localState.update { it.copy(optionsSheet = null) }
         }
 
         /** Shows the list of installed apps to link to the app. */
@@ -178,6 +240,7 @@ class AppDetailsViewModel
             val installedApps: List<InstalledApp>? = null,
             val isConfirmingRemove: Boolean = false,
             val expandedReleaseId: Long? = null,
+            val optionsSheet: OptionsSheet? = null,
         )
 
         private companion object {

@@ -45,4 +45,21 @@ data class TrackedAppEntity(
     /** GitHub ID of the release the user was last notified about, so each update is notified once. */
     @ColumnInfo(name = "notified_release_id")
     val notifiedReleaseId: Long? = null,
+    /** Regular expression an asset name must contain, `null` for any. */
+    @ColumnInfo(name = "asset_include_pattern")
+    val assetIncludePattern: String? = null,
+    /** Regular expression an asset name must not contain, `null` for none. */
+    @ColumnInfo(name = "asset_exclude_pattern")
+    val assetExcludePattern: String? = null,
+    /** Regular expression that extracts the version from a release tag. */
+    @ColumnInfo(name = "version_pattern")
+    val versionPattern: String? = null,
+    /** GitHub ID of the release APK Manager installed, with the version code of its APK. */
+    @ColumnInfo(name = "installed_release_id")
+    val installedReleaseId: Long? = null,
+    @ColumnInfo(name = "installed_version_code")
+    val installedVersionCode: Long? = null,
+    /** GitHub ID of a release the user chose to skip. */
+    @ColumnInfo(name = "skipped_release_id")
+    val skippedReleaseId: Long? = null,
 )

@@ -1,6 +1,7 @@
 package me.geckotv.apkmanager.core.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.GitHubRepository
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.RepositoryPreview
@@ -64,6 +65,31 @@ interface TrackedAppsRepository {
     suspend fun setPreferredAssetName(
         id: Long,
         assetName: String?,
+    )
+
+    /** Sets which release assets count for app [id]. */
+    suspend fun setAssetFilter(
+        id: Long,
+        filter: AssetFilter,
+    )
+
+    /** Sets the pattern that extracts the version from the release tags of app [id]; `null` removes it. */
+    suspend fun setVersionPattern(
+        id: Long,
+        pattern: String?,
+    )
+
+    /** Remembers that APK Manager installed release [releaseId] of app [id] as [versionCode]. */
+    suspend fun setInstalledRelease(
+        id: Long,
+        releaseId: Long,
+        versionCode: Long,
+    )
+
+    /** Skips release [releaseId] of app [id] so it does not count as an update; `null` stops skipping. */
+    suspend fun setSkippedRelease(
+        id: Long,
+        releaseId: Long?,
     )
 
     /** Remembers that the user was notified about release [releaseId] of app [id]. */

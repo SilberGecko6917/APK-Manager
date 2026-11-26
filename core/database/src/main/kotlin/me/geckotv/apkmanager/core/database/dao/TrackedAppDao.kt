@@ -62,6 +62,37 @@ interface TrackedAppDao {
         assetName: String?,
     )
 
+    @Query(
+        "UPDATE tracked_apps SET asset_include_pattern = :include, asset_exclude_pattern = :exclude WHERE id = :id",
+    )
+    suspend fun setAssetFilter(
+        id: Long,
+        include: String?,
+        exclude: String?,
+    )
+
+    @Query("UPDATE tracked_apps SET version_pattern = :pattern WHERE id = :id")
+    suspend fun setVersionPattern(
+        id: Long,
+        pattern: String?,
+    )
+
+    @Query(
+        "UPDATE tracked_apps SET installed_release_id = :releaseId, installed_version_code = :versionCode, " +
+            "skipped_release_id = NULL WHERE id = :id",
+    )
+    suspend fun setInstalledRelease(
+        id: Long,
+        releaseId: Long,
+        versionCode: Long,
+    )
+
+    @Query("UPDATE tracked_apps SET skipped_release_id = :releaseId WHERE id = :id")
+    suspend fun setSkippedRelease(
+        id: Long,
+        releaseId: Long?,
+    )
+
     @Query("UPDATE tracked_apps SET notified_release_id = :releaseId WHERE id = :id")
     suspend fun setNotifiedRelease(
         id: Long,

@@ -150,4 +150,44 @@
     <string name="feature_apps_details_remove_title">Remove %1$s?</string>
     <string name="feature_apps_details_remove_message">The app stays installed.</string>
     <string name="feature_apps_details_placeholder">Select an app to see its details</string>
+
+    <!-- Skipped releases -->
+    <!-- Release tag, e.g. "Skip v1.2.0" -->
+    <string name="feature_apps_details_skip">Skip %1$s</string>
+    <!-- Release tag, e.g. "v1.2.0 skipped" -->
+    <string name="feature_apps_status_skipped">%1$s skipped</string>
+    <string name="feature_apps_details_skip_undo">Undo</string>
+    <string name="feature_apps_details_installed_label">Installed</string>
+
+    <!-- Advanced options -->
+    <string name="feature_apps_details_advanced">Advanced</string>
+    <string name="feature_apps_filter_title">APK filter</string>
+    <string name="feature_apps_filter_all">All APKs</string>
+    <!-- Regular expression the file name must contain, e.g. "Contains foss" -->
+    <string name="feature_apps_filter_contains">Contains %1$s</string>
+    <!-- Regular expression the file name must not contain, e.g. "Without debug" -->
+    <string name="feature_apps_filter_without">Without %1$s</string>
+    <string name="feature_apps_filter_include_label">Name contains (regex)</string>
+    <string name="feature_apps_filter_exclude_label">Name does not contain (regex)</string>
+    <string name="feature_apps_filter_invalid">Not a valid regular expression</string>
+    <!-- Release tag, e.g. "APKs in v1.2.0" -->
+    <string name="feature_apps_filter_preview">APKs in %1$s</string>
+    <string name="feature_apps_filter_preview_none">The latest release has no APK files</string>
+    <string name="feature_apps_filter_preview_no_release">No release found yet</string>
+    <string name="feature_apps_filter_will_install">Will be installed</string>
+    <string name="feature_apps_filter_excluded">Filtered out</string>
+    <string name="feature_apps_filter_incompatible">Not compatible with this device</string>
+    <string name="feature_apps_filter_no_match">No APK matches this filter</string>
+    <string name="feature_apps_pattern_title">Version from tag</string>
+    <string name="feature_apps_pattern_automatic">Automatic</string>
+    <string name="feature_apps_pattern_label">Pattern (regex)</string>
+    <string name="feature_apps_pattern_hint">The first group, or the whole match, is the version</string>
+    <string name="feature_apps_pattern_preview">Release tags</string>
+    <string name="feature_apps_pattern_preview_none">No release tags to preview</string>
+    <string name="feature_apps_pattern_tag_column">Tag</string>
+    <string name="feature_apps_pattern_version_column">Version</string>
+    <string name="feature_apps_pattern_understood">Understood as a version</string>
+    <string name="feature_apps_pattern_not_understood">Not understood as a version</string>
+    <string name="feature_apps_options_reset">Reset</string>
+    <string name="feature_apps_options_save">Save</string>
 </resources>

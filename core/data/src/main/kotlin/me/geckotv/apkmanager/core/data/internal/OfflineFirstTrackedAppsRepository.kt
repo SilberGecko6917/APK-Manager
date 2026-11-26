@@ -15,6 +15,7 @@ import me.geckotv.apkmanager.core.data.repository.UpdateCheckResult
 import me.geckotv.apkmanager.core.database.dao.TrackedAppDao
 import me.geckotv.apkmanager.core.database.model.TrackedAppEntity
 import me.geckotv.apkmanager.core.database.model.TrackedAppWithRelease
+import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.GitHubRepository
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.RepositoryPreview
@@ -147,6 +148,39 @@ internal class OfflineFirstTrackedAppsRepository
             assetName: String?,
         ) {
             dao.setPreferredAssetName(id, assetName)
+        }
+
+        override suspend fun setAssetFilter(
+            id: Long,
+            filter: AssetFilter,
+        ) {
+            dao.setAssetFilter(
+                id,
+                filter.include?.takeIf(String::isNotBlank),
+                filter.exclude?.takeIf(String::isNotBlank),
+            )
+        }
+
+        override suspend fun setVersionPattern(
+            id: Long,
+            pattern: String?,
+        ) {
+            dao.setVersionPattern(id, pattern?.takeIf(String::isNotBlank))
+        }
+
+        override suspend fun setInstalledRelease(
+            id: Long,
+            releaseId: Long,
+            versionCode: Long,
+        ) {
+            dao.setInstalledRelease(id, releaseId, versionCode)
+        }
+
+        override suspend fun setSkippedRelease(
+            id: Long,
+            releaseId: Long?,
+        ) {
+            dao.setSkippedRelease(id, releaseId)
         }
 
         override suspend fun setNotifiedRelease(
