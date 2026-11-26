@@ -14,6 +14,7 @@ import me.geckotv.apkmanager.core.datastore.UserSettingsRepository
 import me.geckotv.apkmanager.core.model.GitHubAccount
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.model.UserSettings
 import javax.inject.Inject
 
@@ -63,6 +64,20 @@ class SettingsViewModel
 
         fun setCheckOnlyOnUnmeteredNetwork(checkOnlyOnUnmeteredNetwork: Boolean) {
             viewModelScope.launch { userSettingsRepository.setCheckOnlyOnUnmeteredNetwork(checkOnlyOnUnmeteredNetwork) }
+        }
+
+        /** Installs updates automatically for apps without an own choice, or only notifies about them. */
+        fun setInstallUpdatesAutomatically(installAutomatically: Boolean) {
+            val policy = if (installAutomatically) UpdatePolicy.Install else UpdatePolicy.Notify
+            viewModelScope.launch { userSettingsRepository.setDefaultUpdatePolicy(policy) }
+        }
+
+        fun setAutoUpdateOnlyOnUnmeteredNetwork(onlyOnUnmeteredNetwork: Boolean) {
+            viewModelScope.launch { userSettingsRepository.setAutoUpdateOnlyOnUnmeteredNetwork(onlyOnUnmeteredNetwork) }
+        }
+
+        fun setAutoUpdateOnlyWhileCharging(onlyWhileCharging: Boolean) {
+            viewModelScope.launch { userSettingsRepository.setAutoUpdateOnlyWhileCharging(onlyWhileCharging) }
         }
 
         private companion object {

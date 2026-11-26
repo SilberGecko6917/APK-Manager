@@ -188,6 +188,20 @@
     <string name="feature_apps_pattern_version_column">Version</string>
     <string name="feature_apps_pattern_understood">Understood as a version</string>
     <string name="feature_apps_pattern_not_understood">Not understood as a version</string>
+    <!-- Update policy -->
+    <string name="feature_apps_updates_title">Updates</string>
+    <string name="feature_apps_updates_notify">Notify only</string>
+    <string name="feature_apps_updates_install">Install automatically</string>
+    <!-- The default from the settings, e.g. "Default (Notify only)" -->
+    <string name="feature_apps_updates_default">Default (%1$s)</string>
+    <string name="feature_apps_updates_use_default">Use default</string>
+    <!-- The default from the settings, e.g. "Currently: Notify only" -->
+    <string name="feature_apps_updates_use_default_summary">Currently: %1$s</string>
+    <string name="feature_apps_updates_notify_summary">Get a notification and install the update yourself</string>
+    <string name="feature_apps_updates_install_summary">Download, verify and install new releases in the background</string>
+    <string name="feature_apps_updates_confirm_installer">Android will ask you to confirm each update, because another app installed it.</string>
+    <string name="feature_apps_updates_confirm_target_sdk">Android will ask you to confirm each update, because the app targets an older Android version.</string>
+    <string name="feature_apps_updates_confirm_android">Android will ask you to confirm each update, because your Android version is older than 12.</string>
     <string name="feature_apps_options_reset">Reset</string>
     <string name="feature_apps_options_save">Save</string>
 </resources>

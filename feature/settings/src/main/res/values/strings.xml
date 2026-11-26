@@ -16,6 +16,13 @@
     <string name="feature_settings_unmetered_only_summary">Don\'t use mobile data for background checks</string>
     <string name="feature_settings_check_interval">Check every</string>
     <string name="feature_settings_check_interval_hours">%d h</string>
+    <string name="feature_settings_automatic_updates">Automatic updates</string>
+    <string name="feature_settings_install_automatically">Install updates automatically</string>
+    <string name="feature_settings_install_automatically_summary">For apps you haven\'t set otherwise</string>
+    <string name="feature_settings_auto_update_unmetered_summary">Don\'t use mobile data to download updates</string>
+    <string name="feature_settings_charging_only">Only while charging</string>
+    <string name="feature_settings_charging_only_summary">Wait until the device is plugged in</string>
+    <string name="feature_settings_automatic_updates_info">Android installs updates without asking only for apps that APK Manager installed. For other apps, a notification asks you to confirm. Updates are not downloaded while the battery is low.</string>
     <string name="feature_settings_theme_system">System</string>
     <string name="feature_settings_theme_light">Light</string>
     <string name="feature_settings_theme_dark">Dark</string>

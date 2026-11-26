@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.runTest
 import me.geckotv.apkmanager.core.auth.AuthState
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.model.UserSettings
 import me.geckotv.apkmanager.core.testing.FakeAuthRepository
 import me.geckotv.apkmanager.core.testing.FakeUserSettingsRepository
@@ -75,6 +76,28 @@ class SettingsViewModelTest {
                     checkInterval = UpdateCheckInterval.Every6Hours,
                     checkOnlyOnUnmeteredNetwork = true,
                 ),
+                repository.current,
+            )
+        }
+
+    @Test
+    fun installingUpdatesAutomaticallySetsTheDefaultPolicy() =
+        runTest {
+            viewModel.setInstallUpdatesAutomatically(true)
+            assertEquals(UpdatePolicy.Install, repository.current.defaultUpdatePolicy)
+
+            viewModel.setInstallUpdatesAutomatically(false)
+            assertEquals(UpdatePolicy.Notify, repository.current.defaultUpdatePolicy)
+        }
+
+    @Test
+    fun automaticUpdateConditionsAreWrittenToTheRepository() =
+        runTest {
+            viewModel.setAutoUpdateOnlyOnUnmeteredNetwork(false)
+            viewModel.setAutoUpdateOnlyWhileCharging(true)
+
+            assertEquals(
+                UserSettings(autoUpdateOnlyOnUnmeteredNetwork = false, autoUpdateOnlyWhileCharging = true),
                 repository.current,
             )
         }
