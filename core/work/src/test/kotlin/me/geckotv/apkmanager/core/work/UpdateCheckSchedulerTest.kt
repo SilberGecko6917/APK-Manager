@@ -44,7 +44,11 @@ class UpdateCheckSchedulerTest {
                     UserSettings(checkInterval = UpdateCheckInterval.Every6Hours, checkOnlyOnUnmeteredNetwork = true),
                 )
 
-            UpdateCheckScheduler(workManager, settings, CoroutineScope(UnconfinedTestDispatcher(testScheduler))).start()
+            UpdateCheckScheduler(
+                { workManager },
+                settings,
+                CoroutineScope(UnconfinedTestDispatcher(testScheduler)),
+            ).start()
 
             val work = scheduledWork().single()
             assertEquals(WorkInfo.State.ENQUEUED, work.state)
@@ -57,7 +61,11 @@ class UpdateCheckSchedulerTest {
     fun changedSettings_updateTheSchedule() =
         runTest {
             val settings = FakeUserSettingsRepository()
-            UpdateCheckScheduler(workManager, settings, CoroutineScope(UnconfinedTestDispatcher(testScheduler))).start()
+            UpdateCheckScheduler(
+                { workManager },
+                settings,
+                CoroutineScope(UnconfinedTestDispatcher(testScheduler)),
+            ).start()
 
             settings.setCheckInterval(UpdateCheckInterval.Every24Hours)
 
@@ -70,7 +78,11 @@ class UpdateCheckSchedulerTest {
     fun disabled_cancelsTheCheck() =
         runTest {
             val settings = FakeUserSettingsRepository()
-            UpdateCheckScheduler(workManager, settings, CoroutineScope(UnconfinedTestDispatcher(testScheduler))).start()
+            UpdateCheckScheduler(
+                { workManager },
+                settings,
+                CoroutineScope(UnconfinedTestDispatcher(testScheduler)),
+            ).start()
 
             settings.setBackgroundChecksEnabled(false)
 

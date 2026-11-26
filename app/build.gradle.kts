@@ -62,6 +62,9 @@ android {
         }
     }
 
+    // ApkManagerApplicationTest starts the real application, which needs the app's resources.
+    testOptions.unitTests.isIncludeAndroidResources = true
+
     // F-Droid and IzzyOnDroid reject APKs that contain the encrypted dependency info block.
     dependenciesInfo {
         includeInApk = false
@@ -100,6 +103,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.core)
 
     testImplementation(projects.core.testing)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.robolectric)
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
 }
