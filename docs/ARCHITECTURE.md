@@ -172,15 +172,15 @@ Release builds add APK Manager's own repository (Gradle property `apkmanager.git
 
 ### Installer backends
 
-```kotlin
-interface Installer {
-    suspend fun install(session: InstallRequest): InstallResult
-}
-```
+`SystemInstaller` installs a verified APK file and reports `Success`, `PendingUserAction` or `Failure`. `RoutingSystemInstaller` picks the backend chosen in the settings:
 
-- **Default:** `PackageInstaller` sessions. Results arrive through a broadcast receiver; `STATUS_PENDING_USER_ACTION` shows the system confirmation (or a notification when in the background).
-- **Shizuku:** privileged session through Shizuku, no confirmation needed for any app.
-- **Root:** `pm install` through `su`.
+- **Android (default):** `PackageInstaller` sessions (see above). Android asks the user to confirm, except for updates of apps APK Manager installed (Android 12+, see [automatic updates](#automatic-updates)).
+- **Shizuku (or Sui):** installs every app without asking. Used while it is selected and ready (running and permission granted); otherwise APK Manager falls back to Android's installer. Right after the app starts, it waits up to three seconds for Shizuku's binder.
+  - `ShizukuSystemInstaller` starts a Shizuku *user service* (`ShizukuInstallService`), which runs with ADB (shell) or root privileges and calls `pm install -S <size> -i <APK Manager> --user current`.
+  - APK Manager streams the already verified APK to the service in 256 KiB chunks over Binder, so the service needs no access to APK Manager's private files and no hidden Android APIs are used. APK Manager stays the installer of record, so later updates also work with Android's installer.
+  - `pm`'s output ("Success" or "Failure [INSTALL_FAILED_…]") is mapped to the same failures as session results.
+  - `InstallerBackends` exposes Shizuku's state (not installed, not running, unsupported, permission required or denied, ready) for the settings screen.
+- **Root:** `pm install` through `su` (planned).
 - **Dhizuku:** later.
 
 ## Automatic updates
@@ -201,7 +201,7 @@ Without root or Shizuku, Android 12+ installs an update without asking (`setRequ
 - APK Manager is the installer of record (or update owner on Android 14+) of the app being updated, or the app is APK Manager itself, and
 - the app being updated targets a recent enough API level: 29 on Android 12, 30 on 13, 31 on 14, and from Android 15 on two versions below the device's (33 on 15, 34 on 16).
 
-`UnattendedUpdates.isPossible` mirrors these rules so the UI can tell the user up front; Android may still ask, which the install pipeline handles. In practice, the first update of an app installed by another source needs one confirmation. After that, updates can run unattended. With Shizuku or root (planned), all updates can be unattended.
+`UnattendedUpdates.isPossible` mirrors these rules so the UI can tell the user up front; Android may still ask, which the install pipeline handles. In practice, the first update of an app installed by another source needs one confirmation. After that, updates can run unattended. With Shizuku (or root, planned), all updates are unattended.
 
 ## Android developer verification
 
