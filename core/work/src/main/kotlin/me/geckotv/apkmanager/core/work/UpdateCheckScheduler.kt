@@ -5,6 +5,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import dagger.Lazy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -20,12 +21,16 @@ import javax.inject.Singleton
 /**
  * Keeps the periodic background update check in line with the settings: scheduled with the chosen
  * interval and network constraint while background checks are on, cancelled while they are off.
+ *
+ * [workManager] is [Lazy] on purpose: the application injects this class, and getting WorkManager
+ * initializes it with the application's configuration, which needs the application's own injected
+ * worker factory. Getting it during injection crashed the app at start (0.1.0-alpha.7).
  */
 @Singleton
 class UpdateCheckScheduler
     @Inject
     constructor(
-        private val workManager: WorkManager,
+        private val workManager: Lazy<WorkManager>,
         private val userSettingsRepository: UserSettingsRepository,
         @ApplicationScope private val scope: CoroutineScope,
     ) {
@@ -46,7 +51,7 @@ class UpdateCheckScheduler
 
         private fun apply(settings: ScheduleSettings) {
             if (!settings.enabled) {
-                workManager.cancelUniqueWork(WORK_NAME)
+                workManager.get().cancelUniqueWork(WORK_NAME)
                 return
             }
             val constraints =
@@ -60,7 +65,7 @@ class UpdateCheckScheduler
                 PeriodicWorkRequestBuilder<UpdateCheckWorker>(settings.interval.hours, TimeUnit.HOURS)
                     .setConstraints(constraints)
                     .build()
-            workManager.enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.UPDATE, request)
+            workManager.get().enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.UPDATE, request)
         }
 
         private data class ScheduleSettings(
