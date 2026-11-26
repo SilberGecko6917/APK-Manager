@@ -4,11 +4,22 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- Lets the system skip the confirmation for updates of apps that APK Manager installed (Android 12+). -->
     <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
+    <!-- Keeps downloads running while the user is in another app. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application>
         <receiver
             android:name=".internal.InstallStatusReceiver"
             android:exported="false" />
+        <receiver
+            android:name=".internal.InstallActionReceiver"
+            android:exported="false" />
+
+        <service
+            android:name=".internal.InstallService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 
 </manifest>

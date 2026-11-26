@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_installer_channel_installs">Downloads and installs</string>
+    <string name="core_installer_channel_installs_description">Progress of app updates that are being downloaded and installed</string>
+    <string name="core_installer_downloading">Downloading %1$s</string>
+    <string name="core_installer_downloading_progress">%1$d %% · %2$s of %3$s</string>
+    <string name="core_installer_verifying">Checking %1$s</string>
+    <string name="core_installer_installing">Installing %1$s</string>
+    <string name="core_installer_waiting">Tap to install %1$s</string>
+    <string name="core_installer_waiting_text">Android needs your confirmation</string>
+    <string name="core_installer_cancel">Cancel</string>
+    <plurals name="core_installer_summary">
+        <item quantity="one">Updating %d app</item>
+        <item quantity="other">Updating %d apps</item>
+    </plurals>
+</resources>
