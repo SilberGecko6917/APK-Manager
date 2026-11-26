@@ -1,12 +1,15 @@
 package me.geckotv.apkmanager.feature.settings
 
 import android.os.Build
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -15,7 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -25,6 +30,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import me.geckotv.apkmanager.core.designsystem.component.ApkManagerTopAppBar
 import me.geckotv.apkmanager.core.designsystem.component.ButtonGroupOption
 import me.geckotv.apkmanager.core.designsystem.component.Section
@@ -35,6 +41,9 @@ import me.geckotv.apkmanager.core.designsystem.component.SingleChoiceButtonGroup
 import me.geckotv.apkmanager.core.designsystem.component.SwitchSectionItem
 import me.geckotv.apkmanager.core.designsystem.icon.ApkManagerIcons
 import me.geckotv.apkmanager.core.designsystem.theme.ApkManagerTheme
+import me.geckotv.apkmanager.core.model.AuthMethod
+import me.geckotv.apkmanager.core.model.GitHubAccessLevel
+import me.geckotv.apkmanager.core.model.GitHubAccount
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
@@ -123,7 +132,13 @@ internal fun SettingsScreen(
                 ),
         ) {
             if (uiState is SettingsUiState.Success) {
-                item(key = "account") { AccountSettings(onOpenAccount = onOpenAccount) }
+                item(key = "account") {
+                    AccountSettings(
+                        account = uiState.account,
+                        needsSignIn = uiState.accountNeedsSignIn,
+                        onOpenAccount = onOpenAccount,
+                    )
+                }
                 item(key = "updates") {
                     UpdateSettings(
                         settings = uiState.settings,
@@ -264,15 +279,20 @@ private fun AppearanceSettings(
 
 @Composable
 private fun AccountSettings(
+    account: GitHubAccount?,
+    needsSignIn: Boolean,
     onOpenAccount: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Section(modifier = modifier, title = stringResource(R.string.feature_settings_account)) {
         item {
             SectionItem(
-                headline = stringResource(R.string.feature_settings_github_account),
-                supportingText = stringResource(R.string.feature_settings_github_account_summary),
-                leadingContent = { SectionItemIcon(ApkManagerIcons.AccountCircle) },
+                headline =
+                    account?.let { it.name ?: it.login } ?: stringResource(R.string.feature_settings_github_account),
+                supportingText =
+                    account?.let { accountSummary(it, needsSignIn) }
+                        ?: stringResource(R.string.feature_settings_github_account_summary),
+                leadingContent = { AccountAvatar(avatarUrl = account?.avatarUrl) },
                 trailingContent = {
                     Icon(
                         painter = painterResource(ApkManagerIcons.ChevronRight),
@@ -285,6 +305,51 @@ private fun AccountSettings(
         }
     }
 }
+
+/** `@login` and how the account is signed in, or that it has to sign in again. */
+@Composable
+private fun accountSummary(
+    account: GitHubAccount,
+    needsSignIn: Boolean,
+): String =
+    when {
+        needsSignIn -> {
+            stringResource(R.string.feature_settings_account_expired, account.login)
+        }
+
+        account.authMethod == AuthMethod.PersonalAccessToken -> {
+            stringResource(R.string.feature_settings_account_token, account.login)
+        }
+
+        account.accessLevel == GitHubAccessLevel.Private -> {
+            stringResource(R.string.feature_settings_account_private, account.login)
+        }
+
+        else -> {
+            stringResource(R.string.feature_settings_account_public, account.login)
+        }
+    }
+
+/** The GitHub avatar as a circle; the account icon while it loads or when signed out. */
+@Composable
+private fun AccountAvatar(
+    avatarUrl: String?,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.size(AvatarSize)) {
+        SectionItemIcon(ApkManagerIcons.AccountCircle, modifier = Modifier.size(AvatarSize))
+        if (avatarUrl != null) {
+            AsyncImage(
+                model = avatarUrl,
+                contentDescription = null,
+                modifier = Modifier.size(AvatarSize).clip(CircleShape),
+                contentScale = ContentScale.Crop,
+            )
+        }
+    }
+}
+
+private val AvatarSize = 40.dp
 
 @Composable
 private fun AboutSettings(

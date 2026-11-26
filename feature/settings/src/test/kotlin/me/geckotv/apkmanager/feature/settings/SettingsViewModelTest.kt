@@ -5,9 +5,11 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import me.geckotv.apkmanager.core.auth.AuthState
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
+import me.geckotv.apkmanager.core.testing.FakeAuthRepository
 import me.geckotv.apkmanager.core.testing.FakeUserSettingsRepository
 import me.geckotv.apkmanager.core.testing.MainDispatcherRule
 import org.junit.Assert.assertEquals
@@ -21,12 +23,13 @@ class SettingsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val repository = FakeUserSettingsRepository()
+    private val authRepository = FakeAuthRepository()
     private lateinit var viewModel: SettingsViewModel
 
     // Created after MainDispatcherRule has replaced Dispatchers.Main, so viewModelScope uses the test dispatcher.
     @Before
     fun setUp() {
-        viewModel = SettingsViewModel(repository)
+        viewModel = SettingsViewModel(repository, authRepository)
     }
 
     @Test
@@ -39,6 +42,16 @@ class SettingsViewModelTest {
 
             repository.setThemeMode(ThemeMode.Light)
             assertEquals(SettingsUiState.Success(UserSettings(themeMode = ThemeMode.Light)), viewModel.uiState.value)
+        }
+
+    @Test
+    fun uiStateShowsTheSignedInAccount() =
+        runTest {
+            val account = FakeAuthRepository.sampleAccount()
+            val signedIn = SettingsViewModel(repository, FakeAuthRepository(AuthState.SignedIn(account)))
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { signedIn.uiState.collect() }
+
+            assertEquals(SettingsUiState.Success(UserSettings(), account = account), signedIn.uiState.value)
         }
 
     @Test
