@@ -54,6 +54,7 @@ Signed APKs are published on the [Releases](https://github.com/SilberGecko6917/A
 | `UPDATE_PACKAGES_WITHOUT_USER_ACTION` | Unattended updates (Android 12+) for apps installed through APK Manager. |
 | `QUERY_ALL_PACKAGES` | Detect which tracked apps are installed and compare their versions. APK Manager is not distributed through Google Play. |
 | `POST_NOTIFICATIONS` | Update and download notifications. |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC` | Keep a download running while you use another app. |
 
 ## Building
 

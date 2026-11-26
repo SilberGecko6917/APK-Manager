@@ -78,6 +78,7 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.core.datastore)
     implementation(projects.core.designsystem)
+    implementation(projects.core.installer)
     implementation(projects.core.model)
     implementation(projects.core.work)
     implementation(projects.feature.account)
