@@ -7,6 +7,7 @@ import me.geckotv.apkmanager.core.data.repository.AddAppOptions
 import me.geckotv.apkmanager.core.data.repository.TrackedAppsRepository
 import me.geckotv.apkmanager.core.data.repository.UpdateCheckResult
 import me.geckotv.apkmanager.core.model.GitHubRepository
+import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.RepositoryPreview
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
@@ -23,6 +24,9 @@ class FakeTrackedAppsRepository(
     private val apps = MutableStateFlow(initialApps)
 
     val previews = mutableMapOf<GitHubRepository, SourceResult<RepositoryPreview>>()
+
+    /** Release histories by app ID; apps without an entry fail with [SourceError.NotFound]. */
+    val releaseHistories = mutableMapOf<Long, SourceResult<List<Release>>>()
     var updateCheckResult = UpdateCheckResult(checkedCount = 0, failures = emptyMap())
     var updateCheckCount = 0
         private set
@@ -42,6 +46,9 @@ class FakeTrackedAppsRepository(
         apps.value
             .firstOrNull { it.repository.fullName.equals(repository.fullName, ignoreCase = true) }
             ?.id
+
+    override suspend fun releaseHistory(id: Long): SourceResult<List<Release>> =
+        releaseHistories[id] ?: SourceResult.Failure(SourceError.NotFound)
 
     override suspend fun lookUpRepository(repository: GitHubRepository): SourceResult<RepositoryPreview> =
         previews.entries.firstOrNull { it.key.fullName.equals(repository.fullName, ignoreCase = true) }?.value

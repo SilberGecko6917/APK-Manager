@@ -16,7 +16,9 @@ import me.geckotv.apkmanager.core.database.dao.TrackedAppDao
 import me.geckotv.apkmanager.core.database.model.TrackedAppEntity
 import me.geckotv.apkmanager.core.database.model.TrackedAppWithRelease
 import me.geckotv.apkmanager.core.model.GitHubRepository
+import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.RepositoryPreview
+import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
 import me.geckotv.apkmanager.core.model.TrackedApp
 import me.geckotv.apkmanager.core.network.GitHubNetworkDataSource
@@ -51,6 +53,15 @@ internal class OfflineFirstTrackedAppsRepository
 
         override suspend fun findTrackedApp(repository: GitHubRepository): Long? =
             dao.findByRepository(owner = repository.owner, name = repository.name)?.id
+
+        override suspend fun releaseHistory(id: Long): SourceResult<List<Release>> {
+            val app = dao.getTrackedApp(id) ?: return SourceResult.Failure(SourceError.NotFound)
+            val ref = GitHubRepository(owner = app.owner, name = app.name).toRef()
+            return network
+                .releases(ref, perPage = HISTORY_RELEASE_COUNT)
+                .toSourceResult()
+                .map { releases -> releases.filterNot { it.draft }.map { it.toRelease() } }
+        }
 
         override suspend fun lookUpRepository(repository: GitHubRepository): SourceResult<RepositoryPreview> {
             val ref = repository.toRef()
@@ -155,5 +166,8 @@ internal class OfflineFirstTrackedAppsRepository
         private companion object {
             /** Releases shown when adding an app; enough to find the newest stable one in most repositories. */
             const val PREVIEW_RELEASE_COUNT = 20
+
+            /** Releases shown in the release history of an app. */
+            const val HISTORY_RELEASE_COUNT = 30
         }
     }
