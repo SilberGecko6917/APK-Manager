@@ -14,4 +14,5 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.markdown.renderer.m3)
 }

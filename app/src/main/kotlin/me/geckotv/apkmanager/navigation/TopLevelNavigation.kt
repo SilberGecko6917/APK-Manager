@@ -1,6 +1,7 @@
 package me.geckotv.apkmanager.navigation
 
 import androidx.navigation3.runtime.NavKey
+import me.geckotv.apkmanager.feature.apps.navigation.AppDetailsNavKey
 
 /**
  * Switches to a top-level [destination].
@@ -20,3 +21,12 @@ fun MutableList<NavKey>.navigateToTopLevel(destination: TopLevelDestination) {
 fun List<NavKey>.currentTopLevelDestination(): TopLevelDestination =
     asReversed().firstNotNullOfOrNull { key -> TopLevelDestination.entries.firstOrNull { it.navKey == key } }
         ?: TopLevelDestination.entries.first()
+
+/**
+ * Shows the details of app [appId]. Next to the apps list, the details of another app replace the
+ * ones that are shown instead of stacking up.
+ */
+fun MutableList<NavKey>.openAppDetails(appId: Long) {
+    if (lastOrNull() is AppDetailsNavKey) removeAt(lastIndex)
+    add(AppDetailsNavKey(appId))
+}

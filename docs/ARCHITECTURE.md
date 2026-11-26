@@ -44,8 +44,7 @@ Exact versions live in `gradle/libs.versions.toml`.
 :core:work            Background update checks (WorkManager) and update notifications
 :core:installer       Download, verification, installer backends
 :core:testing         Test fakes and rules
-:feature:apps         Apps list, "Add app" flow
-:feature:details      App details, release and asset selection
+:feature:apps         Apps list, "Add app" flow, app details (release notes, history)
 :feature:onboarding   First-launch permissions
 :feature:account      GitHub account and sign-in
 :feature:settings     Settings, about
@@ -215,7 +214,7 @@ Everything lives in `:core:designsystem`:
 | Typography | Google Sans Flex with fully rounded terminals (`ROND` axis), subset to Latin scripts |
 | Shapes | Slightly larger radii than the Material defaults (12 / 16 / 20 / 28 dp) |
 | Grouped lists | `Section` / `LazyListScope.section` built on Material's `SegmentedListItem`: large outer corners, small inner corners, small gaps. `SectionItem`, `SwitchSectionItem`, `SectionItemIcon`, `SectionHeader` |
-| Navigation | `NavigationToolbar`: a floating toolbar whose selected destination expands to show its label, with an optional FAB |
+| Navigation | `NavigationToolbar`: a floating toolbar whose selected destination expands to show its label, with an optional FAB. On large screens, Navigation 3's `ListDetailSceneStrategy` shows the apps list and the app details side by side |
 | Top app bar | `ApkManagerTopAppBar`: large flexible top app bar with optional subtitle, collapses on scroll |
 | Choices | `SingleChoiceButtonGroup`: connected button group, the selected button morphs into a pill |
 | Sheets | `ApkManagerBottomSheet`: modal bottom sheets instead of dialogs |

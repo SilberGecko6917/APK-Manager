@@ -115,16 +115,39 @@
     <string name="feature_apps_picker_not_installed_summary">Track the app without linking an installed app</string>
     <string name="feature_apps_picker_empty">No matching apps</string>
 
-    <!-- App actions sheet -->
-    <string name="feature_apps_actions_install">Install %1$s</string>
-    <string name="feature_apps_actions_update">Update to %1$s</string>
-    <string name="feature_apps_actions_installed_version">Installed %1$s</string>
-    <string name="feature_apps_actions_latest_release">Latest %1$s</string>
-    <string name="feature_apps_actions_not_installed">Not installed</string>
-    <string name="feature_apps_actions_open_github">Open on GitHub</string>
-    <string name="feature_apps_actions_release_notes">Release notes</string>
-    <string name="feature_apps_actions_remove">Remove</string>
-    <string name="feature_apps_actions_remove_title">Remove %1$s?</string>
-    <string name="feature_apps_actions_remove_message">The app stays installed.</string>
-    <string name="feature_apps_actions_cancel">Cancel</string>
+    <!-- App details -->
+    <string name="feature_apps_details_install">Install %1$s</string>
+    <string name="feature_apps_details_update">Update to %1$s</string>
+    <!-- Installed version name, e.g. "Installed 1.1.0" -->
+    <string name="feature_apps_details_installed_version">Installed %1$s</string>
+    <!-- Latest release tag, e.g. "Latest v1.2.0" -->
+    <string name="feature_apps_details_latest_release">Latest %1$s</string>
+    <string name="feature_apps_details_not_installed">Not installed</string>
+    <string name="feature_apps_details_status_update_available">Update available</string>
+    <string name="feature_apps_details_status_up_to_date">Up to date</string>
+    <string name="feature_apps_details_status_ready">Ready to install</string>
+    <string name="feature_apps_details_status_no_apk">No APK for this device</string>
+    <string name="feature_apps_details_status_no_release">No release found</string>
+    <string name="feature_apps_details_status_unknown">Versions can\'t be compared</string>
+    <string name="feature_apps_details_open_github">Open on GitHub</string>
+    <string name="feature_apps_details_cancel">Cancel</string>
+    <string name="feature_apps_details_whats_new">What\'s new</string>
+    <string name="feature_apps_details_notes_none">No release notes</string>
+    <string name="feature_apps_details_notes_show_more">Show more</string>
+    <string name="feature_apps_details_notes_show_less">Show less</string>
+    <string name="feature_apps_details_settings">Settings</string>
+    <string name="feature_apps_details_history">Release history</string>
+    <plurals name="feature_apps_details_history_count">
+        <item quantity="one">%d release</item>
+        <item quantity="other">%d releases</item>
+    </plurals>
+    <string name="feature_apps_details_history_empty">No releases found</string>
+    <string name="feature_apps_details_history_loading">Loading releases…</string>
+    <string name="feature_apps_details_release_expand">Show release notes</string>
+    <string name="feature_apps_details_release_collapse">Hide release notes</string>
+    <string name="feature_apps_details_remove_app">Remove app</string>
+    <string name="feature_apps_details_remove">Remove</string>
+    <string name="feature_apps_details_remove_title">Remove %1$s?</string>
+    <string name="feature_apps_details_remove_message">The app stays installed.</string>
+    <string name="feature_apps_details_placeholder">Select an app to see its details</string>
 </resources>

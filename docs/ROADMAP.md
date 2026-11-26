@@ -17,7 +17,7 @@ The first usable version: track GitHub apps and install updates manually.
   - Typography (rounded variable font), shapes and motion
   - Grouped segmented lists, flexible top app bars, floating toolbar navigation, button groups, bottom sheets
   - Screenshot tests (Roborazzi) for light, dark and pitch black themes
-- [x] **App shell** (`feat/app-shell`) (adaptive two-pane layouts follow with the app details screen)
+- [x] **App shell** (`feat/app-shell`)
   - Navigation 3 with predictive back and adaptive two-pane layouts
   - Onboarding: install-unknown-apps and notification permissions
   - Screen skeletons: Apps, Settings
@@ -29,7 +29,7 @@ The first usable version: track GitHub apps and install updates manually.
   - Fine-grained personal access token as an alternative
   - Token encrypted with an Android Keystore key, excluded from backups
   - Account screen with live rate limit
-- [x] **App tracking** (`feat/app-tracking`, `feat/apps-ui`, #17, #18) (a full details screen with a Markdown changelog follows)
+- [x] **App tracking** (`feat/app-tracking`, `feat/apps-ui`, #17, #18)
   - Room database for tracked apps, releases and install state
   - "Add app" sheet: URL / `owner/repo` parsing, repository preview, asset picker, package mapping
   - Apps list grouped by "Updates", "Up to date" and "Not installed"; app actions sheet
@@ -40,7 +40,7 @@ The first usable version: track GitHub apps and install updates manually.
 - [x] **Release pipeline** (`ci/release`, #15, #16)
   - Signed release APK attached to GitHub Releases on `v*` tags or a manual workflow run
   - APK Manager tracks its own repository to update itself
-- [ ] **App details** (`feat/app-details`)
+- [x] **App details** (`feat/app-details`)
   - Details screen with installed version, release history and Markdown changelog
   - Adaptive two-pane layout on large screens
 

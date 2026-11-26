@@ -109,36 +109,6 @@ class AppsScreenScreenshotTest {
             AppsScreenFor(listOf(item(app(1, "Octo App", "1.1.0", "v1.2.0"), InstallState.Verifying)))
         }
 
-    @Test
-    fun appActionsLight() = capture("app_actions_light", darkTheme = false) { Sheet { AppActions() } }
-
-    @Test
-    fun appActionsDark() = capture("app_actions_dark", darkTheme = true) { Sheet { AppActions() } }
-
-    @Test
-    fun appActionsInstallLight() =
-        capture("app_actions_install_light", darkTheme = false) {
-            Sheet { AppActions(item(app(5, "Camera", null, "v2.0.0"))) }
-        }
-
-    @Test
-    fun appActionsDownloadingLight() =
-        capture("app_actions_downloading_light", darkTheme = false) {
-            Sheet { AppActions(item(sampleApps().first(), InstallState.Downloading(4_800_000, 12_000_000))) }
-        }
-
-    @Test
-    fun appActionsDownloadingDark() =
-        capture("app_actions_downloading_dark", darkTheme = true) {
-            Sheet { AppActions(item(sampleApps().first(), InstallState.Downloading(4_800_000, 12_000_000))) }
-        }
-
-    @Test
-    fun appActionsInstallingLight() =
-        capture("app_actions_installing_light", darkTheme = false) {
-            Sheet { AppActions(item(sampleApps().first(), InstallState.Installing)) }
-        }
-
     private fun capture(
         name: String,
         darkTheme: Boolean,
@@ -152,7 +122,7 @@ class AppsScreenScreenshotTest {
     @Composable
     private fun AppsScreenFor(items: List<AppItem>) {
         AppsScreen(
-            uiState = AppsUiState.Ready(groups = groupApps(items), isRefreshing = false, actions = null),
+            uiState = AppsUiState.Ready(groups = groupApps(items), isRefreshing = false),
             snackbarHostState = SnackbarHostState(),
             onRefresh = {},
             onAppClick = {},
@@ -185,21 +155,6 @@ class AppsScreenScreenshotTest {
             onPackageSelect = {},
             onAddClick = {},
             showProgressIndicator = false,
-        )
-    }
-
-    @Composable
-    private fun AppActions(item: AppItem = item(sampleApps().first())) {
-        AppActionsContent(
-            item = item,
-            onInstallClick = {},
-            onInstallCancelClick = {},
-            showProgressIndicator = false,
-            onOpenRepositoryClick = {},
-            onReleaseNotesClick = {},
-            onIncludePrereleasesChange = {},
-            onInstalledAppClick = {},
-            onRemoveClick = {},
         )
     }
 

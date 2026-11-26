@@ -2,6 +2,7 @@ package me.geckotv.apkmanager.core.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import me.geckotv.apkmanager.core.model.GitHubRepository
+import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.RepositoryPreview
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
@@ -21,6 +22,12 @@ interface TrackedAppsRepository {
 
     /** The ID of the app tracking [repository] (ignoring case), or `null`. */
     suspend fun findTrackedApp(repository: GitHubRepository): Long?
+
+    /**
+     * The newest published releases of app [id] (pre-releases included), fetched from the source; they
+     * are not stored. Fails with [SourceError.NotFound] if the app does not exist.
+     */
+    suspend fun releaseHistory(id: Long): SourceResult<List<Release>>
 
     /** Fetches a repository and its newest releases so the user can review it before adding it. */
     suspend fun lookUpRepository(repository: GitHubRepository): SourceResult<RepositoryPreview>

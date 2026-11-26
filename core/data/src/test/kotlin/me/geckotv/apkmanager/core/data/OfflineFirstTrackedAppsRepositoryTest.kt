@@ -357,6 +357,35 @@ class OfflineFirstTrackedAppsRepositoryTest {
         }
 
     @Test
+    fun releaseHistory_returnsPublishedReleasesNewestFirst() =
+        runTest {
+            network.addRepository(
+                ref,
+                networkRelease(2, "v2.0.0-beta.1", prerelease = true),
+                networkRelease(1, "v1.0.0"),
+            )
+            val repository = repository()
+            val id = repository.addApp(lookUp(repository), AddAppOptions(null, false, null))
+            network.releases[ref] =
+                listOf(
+                    networkRelease(3, "v2.0.0-beta.2", draft = true),
+                    networkRelease(2, "v2.0.0-beta.1", prerelease = true),
+                    networkRelease(1, "v1.0.0"),
+                )
+
+            val history = (repository.releaseHistory(id) as SourceResult.Success).data
+
+            assertEquals(listOf("v2.0.0-beta.1", "v1.0.0"), history.map { it.tagName })
+            assertEquals("Notes for v1.0.0", history.last().body)
+        }
+
+    @Test
+    fun releaseHistory_unknownApp_failsWithNotFound() =
+        runTest {
+            assertEquals(SourceResult.Failure(SourceError.NotFound), repository().releaseHistory(42))
+        }
+
+    @Test
     fun removeApp_deletesIt() =
         runTest {
             network.addRepository(ref, networkRelease(1, "v1.0.0"))

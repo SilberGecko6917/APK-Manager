@@ -32,6 +32,9 @@ internal val ListIconSize = 40.dp
 /** Size of the icon in sheet headers. */
 internal val HeaderIconSize = 56.dp
 
+/** Size of the icon at the top of the app details. */
+internal val HeroIconSize = 80.dp
+
 private const val ICON_CACHE_SIZE = 64
 
 /** Icons of installed apps by package name and size in pixels, so scrolling a list does not load them again. */
