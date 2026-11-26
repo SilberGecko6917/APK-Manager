@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import me.geckotv.apkmanager.core.designsystem.component.ApkManagerTopAppBar
@@ -49,6 +50,8 @@ import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
 
 private const val SOURCE_CODE_URL = "https://github.com/SilberGecko6917/APK-Manager"
+private const val SHIZUKU_URL = "https://shizuku.rikka.app/"
+private const val SHIZUKU_PACKAGE = "moe.shizuku.privileged.api"
 private const val LICENSE_URL = "https://github.com/SilberGecko6917/APK-Manager/blob/main/LICENSE"
 
 /**
@@ -74,6 +77,12 @@ fun SettingsRoute(
         }
     val uriHandler = LocalUriHandler.current
 
+    // The user comes back from the Shizuku app after starting or allowing it.
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refreshShizukuState()
+        onPauseOrDispose {}
+    }
+
     SettingsScreen(
         uiState = uiState,
         versionName = versionName,
@@ -91,6 +100,20 @@ fun SettingsRoute(
                 onUnmeteredOnlyChange = viewModel::setAutoUpdateOnlyOnUnmeteredNetwork,
                 onChargingOnlyChange = viewModel::setAutoUpdateOnlyWhileCharging,
             ),
+        installer =
+            InstallerActions(
+                onBackendSelect = viewModel::setInstallerBackend,
+                onRequestPermission = viewModel::requestShizukuPermission,
+                onOpenShizukuApp = {
+                    val launchIntent = context.packageManager.getLaunchIntentForPackage(SHIZUKU_PACKAGE)
+                    if (launchIntent != null) {
+                        context.startActivity(launchIntent)
+                    } else {
+                        uriHandler.openUri(SHIZUKU_URL)
+                    }
+                },
+                onOpenShizukuWebsite = { uriHandler.openUri(SHIZUKU_URL) },
+            ),
         onOpenSourceCode = { uriHandler.openUri(SOURCE_CODE_URL) },
         onOpenLicense = { uriHandler.openUri(LICENSE_URL) },
         onOpenAccount = onOpenAccount,
@@ -99,6 +122,8 @@ fun SettingsRoute(
     )
 }
 
+// The list only places the sections; each section is its own composable.
+@Suppress("LongMethod")
 @Composable
 internal fun SettingsScreen(
     uiState: SettingsUiState,
@@ -112,6 +137,7 @@ internal fun SettingsScreen(
     onCheckIntervalChange: (UpdateCheckInterval) -> Unit,
     onUnmeteredOnlyChange: (Boolean) -> Unit,
     automaticUpdates: AutomaticUpdatesActions,
+    installer: InstallerActions,
     onOpenSourceCode: () -> Unit,
     onOpenLicense: () -> Unit,
     onOpenAccount: () -> Unit,
@@ -155,6 +181,7 @@ internal fun SettingsScreen(
                     )
                 }
                 automaticUpdates(settings = uiState.settings, actions = automaticUpdates)
+                installerSettings(uiState = uiState, actions = installer)
                 item(key = "appearance") {
                     AppearanceSettings(
                         settings = uiState.settings,
@@ -431,6 +458,7 @@ private fun SettingsScreenPreviewContent() {
         onCheckIntervalChange = {},
         onUnmeteredOnlyChange = {},
         automaticUpdates = AutomaticUpdatesActions(),
+        installer = InstallerActions(),
         onOpenSourceCode = {},
         onOpenLicense = {},
         onOpenAccount = {},

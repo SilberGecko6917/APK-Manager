@@ -2,7 +2,9 @@ package me.geckotv.apkmanager.feature.settings
 
 import com.github.takahirom.roborazzi.captureRoboImage
 import me.geckotv.apkmanager.core.designsystem.theme.ApkManagerTheme
+import me.geckotv.apkmanager.core.installer.ShizukuState
 import me.geckotv.apkmanager.core.model.GitHubAccount
+import me.geckotv.apkmanager.core.model.InstallerBackend
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.model.UserSettings
@@ -49,16 +51,38 @@ class SettingsScreenScreenshotTest {
             darkTheme = false,
         )
 
+    // A taller screen, so the "Installer" section below the automatic updates is visible.
+    @Test
+    @Config(qualifiers = "w411dp-h1400dp-xxhdpi")
+    fun settingsShizukuPermissionRequiredLight() =
+        capture(
+            "settings_shizuku_permission_required_light",
+            UserSettings(themeMode = ThemeMode.Light, installerBackend = InstallerBackend.Shizuku),
+            darkTheme = false,
+            shizukuState = ShizukuState.PermissionRequired,
+        )
+
+    @Test
+    @Config(qualifiers = "w411dp-h1400dp-xxhdpi")
+    fun settingsShizukuReadyDark() =
+        capture(
+            "settings_shizuku_ready_dark",
+            UserSettings(themeMode = ThemeMode.Dark, installerBackend = InstallerBackend.Shizuku),
+            darkTheme = true,
+            shizukuState = ShizukuState.Ready(isRoot = false),
+        )
+
     private fun capture(
         name: String,
         settings: UserSettings,
         darkTheme: Boolean,
         account: GitHubAccount? = null,
+        shizukuState: ShizukuState = ShizukuState.NotInstalled,
     ) {
         captureRoboImage(filePath = "build/outputs/roborazzi/$name.png") {
             ApkManagerTheme(darkTheme = darkTheme, dynamicColor = false, amoledBlack = settings.useAmoledBlack) {
                 SettingsScreen(
-                    uiState = SettingsUiState.Success(settings, account = account),
+                    uiState = SettingsUiState.Success(settings, account = account, shizukuState = shizukuState),
                     versionName = "0.1.0",
                     supportsDynamicColor = true,
                     onThemeModeChange = {},
@@ -69,6 +93,7 @@ class SettingsScreenScreenshotTest {
                     onCheckIntervalChange = {},
                     onUnmeteredOnlyChange = {},
                     automaticUpdates = AutomaticUpdatesActions(),
+                    installer = InstallerActions(),
                     onOpenSourceCode = {},
                     onOpenLicense = {},
                     onOpenAccount = {},
