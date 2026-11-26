@@ -89,7 +89,7 @@ internal class DefaultAppInstaller
         private suspend fun run(app: TrackedApp): InstallState {
             val asset =
                 app.latestRelease?.let { release ->
-                    ApkAssets.select(release.assets, deviceInfo.supportedAbis, app.preferredAssetName)
+                    ApkAssets.select(release.assets, deviceInfo.supportedAbis, app.preferredAssetName, app.assetFilter)
                 }
             return when {
                 !canInstallPackages() -> {
@@ -166,6 +166,9 @@ internal class DefaultAppInstaller
 
                     SessionResult.Success -> {
                         if (app.packageName == null) trackedAppsRepository.setPackageName(app.id, apk.packageName)
+                        app.latestRelease?.let { release ->
+                            trackedAppsRepository.setInstalledRelease(app.id, release.id, apk.versionCode)
+                        }
                         finalState = InstallState.Succeeded(apk.versionName)
                     }
 

@@ -126,6 +126,9 @@ class TrackedAppDaoTest {
             dao.setIncludePrereleases(id, includePrereleases = true)
             dao.setChecked(id, checkedAt = 42, etag = null)
             dao.setNotifiedRelease(id, releaseId = 7)
+            dao.setAssetFilter(id, include = "foss", exclude = "debug")
+            dao.setVersionPattern(id, pattern = "(\\d+)")
+            dao.setSkippedRelease(id, releaseId = 9)
 
             val app = dao.getTrackedApp(id)!!
             assertEquals("com.example.app", app.packageName)
@@ -134,6 +137,17 @@ class TrackedAppDaoTest {
             assertEquals(42L, app.lastCheckedAt)
             assertNull(app.releaseEtag)
             assertEquals(7L, app.notifiedReleaseId)
+            assertEquals("foss", app.assetIncludePattern)
+            assertEquals("debug", app.assetExcludePattern)
+            assertEquals("(\\d+)", app.versionPattern)
+            assertEquals(9L, app.skippedReleaseId)
+
+            dao.setInstalledRelease(id, releaseId = 11, versionCode = 42)
+
+            val installed = dao.getTrackedApp(id)!!
+            assertEquals(11L, installed.installedReleaseId)
+            assertEquals(42L, installed.installedVersionCode)
+            assertNull("Installing a release ends skipping", installed.skippedReleaseId)
         }
 
     private fun trackedApp(

@@ -3,8 +3,10 @@ package me.geckotv.apkmanager.core.data.internal
 import me.geckotv.apkmanager.core.database.model.LatestReleaseEntity
 import me.geckotv.apkmanager.core.database.model.ReleaseAssetEntity
 import me.geckotv.apkmanager.core.database.model.TrackedAppWithRelease
+import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.GitHubRepository
 import me.geckotv.apkmanager.core.model.InstalledApp
+import me.geckotv.apkmanager.core.model.InstalledRelease
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.ReleaseAsset
 import me.geckotv.apkmanager.core.model.TrackedApp
@@ -78,4 +80,11 @@ internal fun TrackedAppWithRelease.toTrackedApp(installedApp: InstalledApp?): Tr
         addedAt = Instant.ofEpochMilli(app.addedAt),
         lastCheckedAt = app.lastCheckedAt?.let(Instant::ofEpochMilli),
         notifiedReleaseId = app.notifiedReleaseId,
+        assetFilter = AssetFilter(include = app.assetIncludePattern, exclude = app.assetExcludePattern),
+        versionPattern = app.versionPattern,
+        installedRelease =
+            app.installedReleaseId?.let { releaseId ->
+                app.installedVersionCode?.let { versionCode -> InstalledRelease(releaseId, versionCode) }
+            },
+        skippedReleaseId = app.skippedReleaseId,
     )

@@ -78,4 +78,57 @@ class UpdateStatusTest {
         assertEquals(UpdateStatus.Unknown, status(null, "v1.0"))
         assertEquals(UpdateStatus.Unknown, status(null, "nightly"))
     }
+
+    @Test
+    fun `skipped release counts as up to date`() {
+        val status = UpdateStatus.of(installed("1.0"), release("v2.0"), skippedReleaseId = 1)
+
+        assertEquals(UpdateStatus.UpToDate, status)
+    }
+
+    @Test
+    fun `release installed by APK Manager is up to date even without a version in the tag`() {
+        val status =
+            UpdateStatus.of(installed("abc123"), release("nightly"), installedRelease = InstalledRelease(1, 1))
+
+        assertEquals(UpdateStatus.UpToDate, status)
+    }
+
+    @Test
+    fun `another release than the one APK Manager installed is an update when versions cannot be compared`() {
+        val status =
+            UpdateStatus.of(installed("abc123"), release("nightly"), installedRelease = InstalledRelease(0, 1))
+
+        assertEquals(UpdateStatus.UpdateAvailable, status)
+    }
+
+    @Test
+    fun `another release than the one APK Manager installed is compared by version when possible`() {
+        val older = UpdateStatus.of(installed("2.0"), release("v1.9"), installedRelease = InstalledRelease(0, 1))
+
+        assertEquals(UpdateStatus.UpToDate, older)
+    }
+
+    @Test
+    fun `app changed since APK Manager installed it falls back to versions`() {
+        // Version code 2 is installed, APK Manager installed version code 1: someone else updated it.
+        val status =
+            UpdateStatus.of(installed("abc123"), release("nightly"), installedRelease = InstalledRelease(1, 2))
+
+        assertEquals(UpdateStatus.Unknown, status)
+    }
+
+    @Test
+    fun `version pattern extracts the version from the tag`() {
+        val pattern = """(\d+\.\d+)$"""
+
+        assertEquals(
+            UpdateStatus.UpdateAvailable,
+            UpdateStatus.of(installed("3.1"), release("build-2026-3.2"), versionPattern = pattern),
+        )
+        assertEquals(
+            UpdateStatus.UpToDate,
+            UpdateStatus.of(installed("3.2"), release("build-2026-3.2"), versionPattern = pattern),
+        )
+    }
 }

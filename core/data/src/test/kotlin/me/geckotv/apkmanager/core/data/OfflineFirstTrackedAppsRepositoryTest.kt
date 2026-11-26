@@ -11,8 +11,10 @@ import me.geckotv.apkmanager.core.data.internal.OfflineFirstTrackedAppsRepositor
 import me.geckotv.apkmanager.core.data.internal.ReleaseChecker
 import me.geckotv.apkmanager.core.data.repository.AddAppOptions
 import me.geckotv.apkmanager.core.database.ApkManagerDatabase
+import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.GitHubRepository
 import me.geckotv.apkmanager.core.model.InstalledApp
+import me.geckotv.apkmanager.core.model.InstalledRelease
 import me.geckotv.apkmanager.core.model.RepositoryPreview
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
@@ -383,6 +385,48 @@ class OfflineFirstTrackedAppsRepositoryTest {
     fun releaseHistory_unknownApp_failsWithNotFound() =
         runTest {
             assertEquals(SourceResult.Failure(SourceError.NotFound), repository().releaseHistory(42))
+        }
+
+    @Test
+    fun appOptions_areStoredAndMapped() =
+        runTest {
+            network.addRepository(ref, networkRelease(1, "nightly"))
+            installedApps.install(installedApp(versionName = "abc123"))
+            val repository = repository()
+            val id = repository.addApp(lookUp(repository), AddAppOptions("com.example.app", false, null))
+
+            repository.setAssetFilter(id, AssetFilter(include = "foss", exclude = " "))
+            repository.setVersionPattern(id, "(\\d+)")
+            repository.setInstalledRelease(id, releaseId = 1, versionCode = 1)
+
+            repository.observeTrackedApp(id).test {
+                val app = awaitItem()!!
+                assertEquals(AssetFilter(include = "foss", exclude = null), app.assetFilter)
+                assertEquals("(\\d+)", app.versionPattern)
+                assertEquals(InstalledRelease(releaseId = 1, versionCode = 1), app.installedRelease)
+                assertEquals(
+                    "Installed by APK Manager, so `nightly` is up to date",
+                    UpdateStatus.UpToDate,
+                    app.updateStatus,
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun skippedRelease_isNotAnUpdate() =
+        runTest {
+            network.addRepository(ref, networkRelease(1, "v2.0.0"))
+            installedApps.install(installedApp(versionName = "1.0.0"))
+            val repository = repository()
+            val id = repository.addApp(lookUp(repository), AddAppOptions("com.example.app", false, null))
+
+            repository.setSkippedRelease(id, releaseId = 1)
+
+            repository.observeTrackedApp(id).test {
+                assertEquals(UpdateStatus.UpToDate, awaitItem()!!.updateStatus)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test

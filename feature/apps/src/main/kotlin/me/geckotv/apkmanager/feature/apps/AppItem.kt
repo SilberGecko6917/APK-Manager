@@ -48,5 +48,5 @@ internal fun TrackedApp.toItem(
         app = this,
         install = installs[id]?.takeIf { it.isActive },
         hasCompatibleApk =
-            latestRelease?.let { ApkAssets.select(it.assets, supportedAbis, preferredAssetName) } != null,
+            latestRelease?.let { ApkAssets.select(it.assets, supportedAbis, preferredAssetName, assetFilter) } != null,
     )

@@ -53,7 +53,8 @@ object ApkAssets {
     /**
      * The `.apk` assets of a release, best first: compatible before incompatible, then by the
      * device's ABI preference ([supportedAbis] order, i.e. `Build.SUPPORTED_ABIS`), then universal,
-     * release before debug builds. Other files (checksums, `.aab`, `.apks`, archives) are left out.
+     * release before debug builds. Other files (checksums, `.aab`, `.apks`, archives) and assets the
+     * app's [filter] excludes are left out.
      *
      * More precisely, all compatible release builds come first (ranked by ABI preference, universal
      * last), then compatible debug builds, then incompatible ones. Ties keep the original order.
@@ -61,9 +62,10 @@ object ApkAssets {
     fun candidates(
         assets: List<ReleaseAsset>,
         supportedAbis: List<String>,
+        filter: AssetFilter = AssetFilter(),
     ): List<ApkAssetCandidate> =
         assets
-            .filter { it.name.endsWith(APK_EXTENSION, ignoreCase = true) }
+            .filter { it.name.endsWith(APK_EXTENSION, ignoreCase = true) && filter.matches(it.name) }
             .map { rate(it, supportedAbis) }
             .sortedWith(
                 compareBy<ApkAssetCandidate> { group(it) }.thenBy { rank(it, supportedAbis) },
@@ -77,8 +79,9 @@ object ApkAssets {
         assets: List<ReleaseAsset>,
         supportedAbis: List<String>,
         preferredAssetName: String?,
+        filter: AssetFilter = AssetFilter(),
     ): ReleaseAsset? {
-        val compatible = candidates(assets, supportedAbis).filter { it.isCompatible }
+        val compatible = candidates(assets, supportedAbis, filter).filter { it.isCompatible }
         val preferred =
             preferredAssetName?.let { name ->
                 compatible.firstOrNull { matchesPreferred(it.asset.name, name) }
