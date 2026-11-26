@@ -21,11 +21,13 @@ sealed interface InstallState {
     data object Installing : InstallState
 
     /**
-     * The system asks the user to confirm the installation. The UI launches [intent] (once) while the
-     * app is in the foreground.
+     * The system asks the user to confirm the installation. The UI launches [intent] while the app is
+     * in the foreground and then reports it ([isShown]). If the user comes back without deciding,
+     * e.g. because the dialog was closed without an answer, the UI offers to show it again.
      */
     data class WaitingForUser(
         val intent: Intent,
+        val isShown: Boolean = false,
     ) : InstallState
 
     /** The app was installed. */

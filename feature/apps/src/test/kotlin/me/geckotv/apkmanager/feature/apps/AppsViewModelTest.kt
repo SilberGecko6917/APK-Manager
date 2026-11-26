@@ -433,8 +433,23 @@ class AppsViewModelTest {
             viewModel.onConfirmationShown(1)
 
             assertEquals(listOf(1L), installer.confirmationsShown)
-            assertEquals(InstallState.Installing, item(1).install)
+            assertEquals(InstallAction.Confirm, item(1).installAction)
             assertNull(ready().pendingConfirmation)
+        }
+
+    @Test
+    fun confirmingAgainShowsTheConfirmationAgain() =
+        runTest {
+            collectUiState()
+            trackedApps.setApps(sampleApps())
+            installer.stateAfterInstall = InstallState.WaitingForUser(Intent("confirm"))
+            viewModel.install(1)
+            viewModel.onConfirmationShown(1)
+
+            viewModel.install(1)
+
+            assertEquals(1L, ready().pendingConfirmation?.appId)
+            assertEquals(1, installer.installedApps.size)
         }
 
     @Test

@@ -164,6 +164,7 @@ private fun InstallActions(
     if (install != null) {
         InstallProgress(
             state = install,
+            onConfirmClick = onInstallClick.takeIf { installAction == InstallAction.Confirm },
             onCancelClick = onCancelClick,
             showProgressIndicator = showProgressIndicator,
             modifier = modifier,
@@ -173,6 +174,7 @@ private fun InstallActions(
             when (installAction) {
                 InstallAction.Install -> stringResource(R.string.feature_apps_actions_install, tag)
                 InstallAction.Update -> stringResource(R.string.feature_apps_actions_update, tag)
+                InstallAction.Confirm -> stringResource(R.string.feature_apps_install_confirm)
             }
         Button(onClick = onInstallClick, modifier = modifier.fillMaxWidth()) {
             Icon(
@@ -188,6 +190,7 @@ private fun InstallActions(
 @Composable
 private fun InstallProgress(
     state: InstallState,
+    onConfirmClick: (() -> Unit)?,
     onCancelClick: () -> Unit,
     showProgressIndicator: Boolean,
     modifier: Modifier = Modifier,
@@ -207,6 +210,9 @@ private fun InstallProgress(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             TextButton(onClick = onCancelClick) { Text(stringResource(R.string.feature_apps_actions_cancel)) }
+            if (onConfirmClick != null) {
+                Button(onClick = onConfirmClick) { Text(stringResource(R.string.feature_apps_install_confirm)) }
+            }
         }
     }
 }

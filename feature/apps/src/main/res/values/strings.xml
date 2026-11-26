@@ -66,6 +66,7 @@
     <string name="feature_apps_install_verifying">Verifying…</string>
     <string name="feature_apps_install_installing">Installing…</string>
     <string name="feature_apps_install_waiting">Waiting for confirmation</string>
+    <string name="feature_apps_install_confirm">Confirm</string>
 
     <!-- Add app sheet -->
     <string name="feature_apps_add_title">Add app</string>

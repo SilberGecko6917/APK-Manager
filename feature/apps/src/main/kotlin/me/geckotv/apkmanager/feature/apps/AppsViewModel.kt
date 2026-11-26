@@ -151,8 +151,15 @@ class AppsViewModel
             viewModelScope.launch { trackedAppsRepository.removeApp(appId) }
         }
 
-        /** Installs the latest release of app [appId], or updates the app to it. */
+        /**
+         * Installs the latest release of app [appId], or updates the app to it. While the install waits
+         * for the user, shows the system confirmation again.
+         */
         fun install(appId: Long) {
+            if (appInstaller.installs.value[appId] is InstallState.WaitingForUser) {
+                appInstaller.showConfirmationAgain(appId)
+                return
+            }
             viewModelScope.launch {
                 trackedAppsRepository
                     .observeTrackedApps()
@@ -302,7 +309,9 @@ sealed interface AppsUiState {
                     .asSequence()
                     .flatMap { it.items }
                     .firstNotNullOfOrNull { item ->
-                        (item.install as? InstallState.WaitingForUser)?.let { PendingConfirmation(item.id, it.intent) }
+                        (item.install as? InstallState.WaitingForUser)
+                            ?.takeUnless { it.isShown }
+                            ?.let { PendingConfirmation(item.id, it.intent) }
                     }
     }
 }
@@ -347,6 +356,7 @@ data class AppItem(
     val installAction: InstallAction?
         get() =
             when {
+                install is InstallState.WaitingForUser && install.isShown -> InstallAction.Confirm
                 install != null -> null
                 app.updateStatus == UpdateStatus.UpdateAvailable -> InstallAction.Update
                 app.updateStatus == UpdateStatus.NotInstalled && hasCompatibleApk -> InstallAction.Install
@@ -358,6 +368,9 @@ data class AppItem(
 enum class InstallAction {
     Install,
     Update,
+
+    /** Show the system confirmation of a running install again. */
+    Confirm,
 }
 
 enum class AppGroupKind {

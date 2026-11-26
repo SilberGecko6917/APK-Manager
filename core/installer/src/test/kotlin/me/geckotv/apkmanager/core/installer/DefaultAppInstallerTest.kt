@@ -7,7 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -165,7 +165,11 @@ class DefaultAppInstallerTest {
     fun install_waitsForUserConfirmation() =
         runTest {
             val results = MutableSharedFlow<SessionResult>()
-            systemInstaller.results = results.takeWhile { it !is SessionResult.Success }
+            systemInstaller.results =
+                results.transformWhile { result ->
+                    emit(result)
+                    result is SessionResult.PendingUserAction
+                }
             val installer = installer()
             val confirmation = Intent("confirm")
 
@@ -174,7 +178,13 @@ class DefaultAppInstallerTest {
 
             assertEquals(InstallState.WaitingForUser(confirmation), installer.installs.value[1])
             installer.onConfirmationShown(1)
-            assertEquals(InstallState.Installing, installer.installs.value[1])
+            assertEquals(InstallState.WaitingForUser(confirmation, isShown = true), installer.installs.value[1])
+            installer.showConfirmationAgain(1)
+            assertEquals(InstallState.WaitingForUser(confirmation, isShown = false), installer.installs.value[1])
+
+            results.emit(SessionResult.Success)
+
+            assertEquals(InstallState.Succeeded("1.1.0"), installer.installs.value[1])
         }
 
     @Test

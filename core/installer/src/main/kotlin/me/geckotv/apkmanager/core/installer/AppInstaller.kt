@@ -23,6 +23,9 @@ interface AppInstaller {
     /** The UI launched the confirmation of [InstallState.WaitingForUser] for app [appId]. */
     fun onConfirmationShown(appId: Long)
 
+    /** The user wants to see the confirmation for app [appId] again, e.g. after closing it without an answer. */
+    fun showConfirmationAgain(appId: Long)
+
     /** Forgets the finished install of app [appId]. */
     fun dismiss(appId: Long)
 }
