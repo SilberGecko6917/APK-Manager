@@ -1,6 +1,7 @@
 package me.geckotv.apkmanager.core.datastore
 
 import kotlinx.coroutines.flow.Flow
+import me.geckotv.apkmanager.core.model.InstallerBackend
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UpdatePolicy
@@ -35,4 +36,6 @@ interface UserSettingsRepository {
     suspend fun setAutoUpdateOnlyOnUnmeteredNetwork(autoUpdateOnlyOnUnmeteredNetwork: Boolean)
 
     suspend fun setAutoUpdateOnlyWhileCharging(autoUpdateOnlyWhileCharging: Boolean)
+
+    suspend fun setInstallerBackend(installerBackend: InstallerBackend)
 }

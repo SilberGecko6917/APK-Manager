@@ -6,6 +6,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import me.geckotv.apkmanager.core.model.InstallerBackend
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UpdatePolicy
@@ -53,6 +54,7 @@ class DataStoreUserSettingsRepositoryTest {
             repository.setDefaultUpdatePolicy(UpdatePolicy.Install)
             repository.setAutoUpdateOnlyOnUnmeteredNetwork(false)
             repository.setAutoUpdateOnlyWhileCharging(true)
+            repository.setInstallerBackend(InstallerBackend.Shizuku)
 
             repository.settings.test {
                 assertEquals(
@@ -69,6 +71,7 @@ class DataStoreUserSettingsRepositoryTest {
                         defaultUpdatePolicy = UpdatePolicy.Install,
                         autoUpdateOnlyOnUnmeteredNetwork = false,
                         autoUpdateOnlyWhileCharging = true,
+                        installerBackend = InstallerBackend.Shizuku,
                     ),
                     awaitItem(),
                 )
