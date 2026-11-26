@@ -1,6 +1,5 @@
 package me.geckotv.apkmanager.feature.apps
 
-import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,17 +13,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.geckotv.apkmanager.core.data.repository.DeviceInfo
-import me.geckotv.apkmanager.core.data.repository.InstalledAppsRepository
 import me.geckotv.apkmanager.core.data.repository.TrackedAppsRepository
 import me.geckotv.apkmanager.core.data.repository.UpdateCheckResult
 import me.geckotv.apkmanager.core.installer.AppInstaller
 import me.geckotv.apkmanager.core.installer.InstallFailure
 import me.geckotv.apkmanager.core.installer.InstallState
-import me.geckotv.apkmanager.core.model.ApkAssets
-import me.geckotv.apkmanager.core.model.InstalledApp
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.TrackedApp
 import me.geckotv.apkmanager.core.model.UpdateStatus
@@ -32,22 +27,22 @@ import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
-@Suppress("TooManyFunctions")
 class AppsViewModel
     @Inject
     constructor(
         private val trackedAppsRepository: TrackedAppsRepository,
-        private val installedAppsRepository: InstalledAppsRepository,
         private val appInstaller: AppInstaller,
         private val deviceInfo: DeviceInfo,
     ) : ViewModel() {
         private val isRefreshing = MutableStateFlow(false)
-        private val selection = MutableStateFlow<Selection?>(null)
         private val messageChannel = Channel<AppsMessage>(Channel.BUFFERED)
         private var refreshJob: Job? = null
 
-        /** Apps whose running install replaces an installed version, to tell updates from first installs. */
-        private val updatingAppIds = mutableSetOf<Long>()
+        /**
+         * Whether the running install of an app replaces an installed version, by app ID, to tell updates
+         * from first installs. Filled when an install is first seen, whoever started it.
+         */
+        private val installsAreUpdates = mutableMapOf<Long, Boolean>()
 
         /** One-off messages for the user, e.g. why an update check failed. */
         val messages: Flow<AppsMessage> = messageChannel.receiveAsFlow()
@@ -57,18 +52,10 @@ class AppsViewModel
                 trackedAppsRepository.observeTrackedApps(),
                 appInstaller.installs,
                 isRefreshing,
-                selection,
-            ) { apps, installs, refreshing, selected ->
-                val items = apps.map { it.toItem(installs) }
+            ) { apps, installs, refreshing ->
                 AppsUiState.Ready(
-                    groups = groupApps(items),
+                    groups = groupApps(apps.map { it.toItem(installs, deviceInfo.supportedAbis) }),
                     isRefreshing = refreshing,
-                    actions =
-                        selected?.let {
-                            items.firstOrNull { item -> item.id == selected.appId }?.let { item ->
-                                AppActionsUiState(item = item, installedApps = selected.installedApps)
-                            }
-                        },
                 )
             }.stateIn(
                 scope = viewModelScope,
@@ -82,7 +69,9 @@ class AppsViewModel
             }
             viewModelScope.launch {
                 appInstaller.installs.collect { installs ->
-                    installs.forEach { (appId, state) -> if (!state.isActive) onInstallFinished(appId, state) }
+                    installs.forEach { (appId, state) ->
+                        if (state.isActive) onInstallRunning(appId) else onInstallFinished(appId, state)
+                    }
                 }
             }
         }
@@ -101,56 +90,6 @@ class AppsViewModel
                 }
         }
 
-        /** Opens the actions of app [id]. */
-        fun selectApp(id: Long) {
-            selection.value = Selection(appId = id, installedApps = null)
-        }
-
-        fun dismissApp() {
-            selection.value = null
-        }
-
-        /** Shows the list of installed apps to link to the selected app. */
-        fun showPackagePicker() {
-            val appId = selection.value?.appId ?: return
-            viewModelScope.launch {
-                val installedApps = installedAppsRepository.installedApps()
-                selection.update { current ->
-                    current?.takeIf { it.appId == appId }?.copy(installedApps = installedApps)
-                }
-            }
-        }
-
-        fun closePackagePicker() {
-            selection.update { it?.copy(installedApps = null) }
-        }
-
-        /** Links the selected app to the installed [packageName], or unlinks it with `null`. */
-        fun setPackageName(packageName: String?) {
-            val appId = selection.value?.appId ?: return
-            viewModelScope.launch {
-                trackedAppsRepository.setPackageName(appId, packageName)
-                closePackagePicker()
-            }
-        }
-
-        fun setIncludePrereleases(includePrereleases: Boolean) {
-            val appId = selection.value?.appId ?: return
-            viewModelScope.launch {
-                trackedAppsRepository
-                    .setIncludePrereleases(appId, includePrereleases)
-                    .toMessage()
-                    ?.let { messageChannel.send(it) }
-            }
-        }
-
-        /** Stops tracking the selected app and closes its actions. */
-        fun removeApp() {
-            val appId = selection.value?.appId ?: return
-            selection.value = null
-            viewModelScope.launch { trackedAppsRepository.removeApp(appId) }
-        }
-
         /**
          * Installs the latest release of app [appId], or updates the app to it. While the install waits
          * for the user, shows the system confirmation again.
@@ -160,13 +99,7 @@ class AppsViewModel
                 appInstaller.showConfirmationAgain(appId)
                 return
             }
-            viewModelScope.launch {
-                trackedAppsRepository
-                    .observeTrackedApps()
-                    .first()
-                    .firstOrNull { it.id == appId }
-                    ?.let(::startInstall)
-            }
+            viewModelScope.launch { findApp(appId)?.let(appInstaller::install) }
         }
 
         /** Updates every app with an update available that is not being installed already. */
@@ -177,30 +110,18 @@ class AppsViewModel
                     .observeTrackedApps()
                     .first()
                     .filter { it.updateStatus == UpdateStatus.UpdateAvailable && installs[it.id]?.isActive != true }
-                    .forEach(::startInstall)
+                    .forEach(appInstaller::install)
             }
         }
 
-        /** Cancels the running install of app [appId]. */
-        fun cancelInstall(appId: Long) {
-            updatingAppIds -= appId
-            appInstaller.cancel(appId)
-        }
+        private suspend fun findApp(appId: Long): TrackedApp? =
+            trackedAppsRepository.observeTrackedApps().first().firstOrNull { it.id == appId }
 
-        /** The system confirmation of the install of app [appId] is on screen. */
-        fun onConfirmationShown(appId: Long) {
-            appInstaller.onConfirmationShown(appId)
-        }
-
-        /** The system confirmation of the install of app [appId] could not be shown. */
-        fun onConfirmationFailed(appId: Long) {
-            cancelInstall(appId)
-            messageChannel.trySend(AppsMessage.InstallFailed(InstallFailure.SystemError(message = null), tag = null))
-        }
-
-        private fun startInstall(app: TrackedApp) {
-            if (app.updateStatus == UpdateStatus.UpdateAvailable) updatingAppIds += app.id
-            appInstaller.install(app)
+        /** Remembers whether the install of app [appId] that just started replaces an installed version. */
+        private suspend fun onInstallRunning(appId: Long) {
+            if (appId !in installsAreUpdates) {
+                installsAreUpdates[appId] = findApp(appId)?.updateStatus == UpdateStatus.UpdateAvailable
+            }
         }
 
         /** Tells the user how the install of app [appId] ended, unless they cancelled it, and forgets it. */
@@ -208,9 +129,9 @@ class AppsViewModel
             appId: Long,
             state: InstallState,
         ) {
-            val wasUpdate = updatingAppIds.remove(appId)
+            val wasUpdate = installsAreUpdates.remove(appId) == true
             appInstaller.dismiss(appId)
-            val app = trackedAppsRepository.observeTrackedApps().first().firstOrNull { it.id == appId }
+            val app = findApp(appId)
             val message =
                 when {
                     state is InstallState.Succeeded && app != null -> {
@@ -231,22 +152,6 @@ class AppsViewModel
                 }
             message?.let { messageChannel.send(it) }
         }
-
-        /** The list item of this app, with its running install and whether the latest release fits this device. */
-        private fun TrackedApp.toItem(installs: Map<Long, InstallState>): AppItem =
-            AppItem(
-                app = this,
-                install = installs[id]?.takeIf { it.isActive },
-                hasCompatibleApk =
-                    latestRelease?.let { ApkAssets.select(it.assets, deviceInfo.supportedAbis, preferredAssetName) } !=
-                        null,
-            )
-
-        private data class Selection(
-            val appId: Long,
-            /** The installed apps to pick from; `null` while the actions are shown. */
-            val installedApps: List<InstalledApp>?,
-        )
 
         private companion object {
             const val STOP_TIMEOUT_MILLIS = 5_000L
@@ -295,32 +200,12 @@ sealed interface AppsUiState {
     /**
      * @property groups the tracked apps; empty if no app is tracked.
      * @property isRefreshing an update check is running.
-     * @property actions the app whose actions sheet is open.
      */
     data class Ready(
         val groups: List<AppGroup>,
         val isRefreshing: Boolean,
-        val actions: AppActionsUiState?,
-    ) : AppsUiState {
-        /** The first install that waits for the user to confirm it in the system dialog. */
-        val pendingConfirmation: PendingConfirmation?
-            get() =
-                groups
-                    .asSequence()
-                    .flatMap { it.items }
-                    .firstNotNullOfOrNull { item ->
-                        (item.install as? InstallState.WaitingForUser)
-                            ?.takeUnless { it.isShown }
-                            ?.let { PendingConfirmation(item.id, it.intent) }
-                    }
-    }
+    ) : AppsUiState
 }
-
-/** The system dialog to launch so the user confirms the install of app [appId]. */
-data class PendingConfirmation(
-    val appId: Long,
-    val intent: Intent,
-)
 
 /** Apps of one [kind], sorted by name. */
 data class AppGroup(
@@ -339,40 +224,6 @@ data class AppGroup(
     }
 }
 
-/**
- * A tracked [app] in the list.
- *
- * @property install the running install of the app, `null` if none is running.
- * @property hasCompatibleApk whether the latest release has an APK for this device.
- */
-data class AppItem(
-    val app: TrackedApp,
-    val install: InstallState? = null,
-    val hasCompatibleApk: Boolean = false,
-) {
-    val id: Long get() = app.id
-
-    /** The install button to offer, `null` if none fits or an install is running. */
-    val installAction: InstallAction?
-        get() =
-            when {
-                install is InstallState.WaitingForUser && install.isShown -> InstallAction.Confirm
-                install != null -> null
-                app.updateStatus == UpdateStatus.UpdateAvailable -> InstallAction.Update
-                app.updateStatus == UpdateStatus.NotInstalled && hasCompatibleApk -> InstallAction.Install
-                else -> null
-            }
-}
-
-/** What installing the latest release does to an app. */
-enum class InstallAction {
-    Install,
-    Update,
-
-    /** Show the system confirmation of a running install again. */
-    Confirm,
-}
-
 enum class AppGroupKind {
     UpdatesAvailable,
     UpToDate,
@@ -387,17 +238,6 @@ enum class AppGroupKind {
                 UpdateStatus.NotInstalled -> NotInstalled
             }
     }
-}
-
-/**
- * The open actions sheet of [item]. While [installedApps] is not `null`, the sheet shows the list
- * of installed apps to link instead of the actions.
- */
-data class AppActionsUiState(
-    val item: AppItem,
-    val installedApps: List<InstalledApp>?,
-) {
-    val app: TrackedApp get() = item.app
 }
 
 /** A one-off message for the user, e.g. about an update check or an install. */

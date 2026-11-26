@@ -64,11 +64,12 @@ import me.geckotv.apkmanager.core.designsystem.icon.ApkManagerIcons
 import me.geckotv.apkmanager.core.designsystem.theme.ApkManagerTheme
 
 /**
- * The tracked apps, grouped by update status, with the sheets to add an app and to act on one.
+ * The tracked apps, grouped by update status, with the sheet to add an app.
  *
  * @param showAddAppSheet whether the sheet to add an app is open.
  * @param onAddAppSheetDismiss called when the user closes the sheet to add an app.
  * @param onAddAppClick called when the user wants to add an app, e.g. from the empty state.
+ * @param onAppClick called with the ID of the app the user taps, to show its details.
  * @param bottomContentPadding extra space at the end of the content, e.g. for the floating navigation toolbar.
  */
 @Composable
@@ -76,6 +77,7 @@ fun AppsRoute(
     showAddAppSheet: Boolean,
     onAddAppSheetDismiss: () -> Unit,
     onAddAppClick: () -> Unit,
+    onAppClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     bottomContentPadding: Dp = 0.dp,
     viewModel: AppsViewModel = hiltViewModel(),
@@ -86,19 +88,11 @@ fun AppsRoute(
     val scope = rememberCoroutineScope()
 
     MessagesEffect(messages = viewModel.messages, snackbarHostState = snackbarHostState)
-    (uiState as? AppsUiState.Ready)?.pendingConfirmation?.let { confirmation ->
-        ConfirmationLaunchEffect(
-            confirmation = confirmation,
-            onShow = viewModel::onConfirmationShown,
-            onFail = viewModel::onConfirmationFailed,
-        )
-    }
-
     AppsScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onRefresh = viewModel::refresh,
-        onAppClick = viewModel::selectApp,
+        onAppClick = onAppClick,
         onInstallClick = viewModel::install,
         onUpdateAllClick = viewModel::updateAll,
         onAddAppClick = onAddAppClick,
@@ -115,19 +109,6 @@ fun AppsRoute(
                     snackbarHostState.showSnackbar(resources.getString(R.string.feature_apps_message_added, name))
                 }
             },
-        )
-    }
-    (uiState as? AppsUiState.Ready)?.actions?.let { actions ->
-        AppActionsSheet(
-            state = actions,
-            onDismiss = viewModel::dismissApp,
-            onIncludePrereleasesChange = viewModel::setIncludePrereleases,
-            onInstalledAppClick = viewModel::showPackagePicker,
-            onPackageSelect = viewModel::setPackageName,
-            onPickerBack = viewModel::closePackagePicker,
-            onRemoveConfirm = viewModel::removeApp,
-            onInstallClick = { viewModel.install(actions.app.id) },
-            onInstallCancelClick = { viewModel.cancelInstall(actions.app.id) },
         )
     }
 }
@@ -155,36 +136,6 @@ private fun MessagesEffect(
                     duration = if (message.isInstallFailure) SnackbarDuration.Long else SnackbarDuration.Short,
                 )
             if (result == SnackbarResult.ActionPerformed) context.openInstallPermissionSettings()
-        }
-    }
-}
-
-/**
- * Launches the system dialog that confirms an install while the app is in the foreground, and
- * reports it so it is launched only once. If several apps wait, the next dialog follows only after
- * the user is back in the app, so dialogs never stack.
- */
-@Composable
-private fun ConfirmationLaunchEffect(
-    confirmation: PendingConfirmation,
-    onShow: (Long) -> Unit,
-    onFail: (Long) -> Unit,
-) {
-    val context = LocalContext.current
-    val currentOnShow by rememberUpdatedState(onShow)
-    val currentOnFail by rememberUpdatedState(onFail)
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    val lifecycleState by lifecycle.currentStateFlow.collectAsState()
-    var launchedSinceResume by remember { mutableStateOf(false) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { launchedSinceResume = false }
-    LaunchedEffect(confirmation, lifecycleState, launchedSinceResume) {
-        if (launchedSinceResume || !lifecycleState.isAtLeast(Lifecycle.State.RESUMED)) return@LaunchedEffect
-        launchedSinceResume = true
-        try {
-            context.startActivity(confirmation.intent)
-            currentOnShow(confirmation.appId)
-        } catch (_: ActivityNotFoundException) {
-            currentOnFail(confirmation.appId)
         }
     }
 }
@@ -393,7 +344,7 @@ fun AddAppFloatingActionButton(
 private fun AppsEmptyLightPreview() {
     ApkManagerTheme(darkTheme = false, dynamicColor = false) {
         AppsScreen(
-            uiState = AppsUiState.Ready(groups = emptyList(), isRefreshing = false, actions = null),
+            uiState = AppsUiState.Ready(groups = emptyList(), isRefreshing = false),
             snackbarHostState = remember { SnackbarHostState() },
             onRefresh = {},
             onAppClick = {},
@@ -409,7 +360,7 @@ private fun AppsEmptyLightPreview() {
 private fun AppsEmptyDarkPreview() {
     ApkManagerTheme(darkTheme = true, dynamicColor = false) {
         AppsScreen(
-            uiState = AppsUiState.Ready(groups = emptyList(), isRefreshing = false, actions = null),
+            uiState = AppsUiState.Ready(groups = emptyList(), isRefreshing = false),
             snackbarHostState = remember { SnackbarHostState() },
             onRefresh = {},
             onAppClick = {},
