@@ -12,7 +12,21 @@ data class UserSettings(
      * can remove it for good.
      */
     val selfUpdatesTracked: Boolean = false,
+    /** Whether APK Manager checks for updates in the background and notifies about them. */
+    val backgroundChecksEnabled: Boolean = true,
+    val checkInterval: UpdateCheckInterval = UpdateCheckInterval.Every12Hours,
+    /** Whether background checks only run on unmetered networks (usually Wi-Fi). */
+    val checkOnlyOnUnmeteredNetwork: Boolean = false,
 )
+
+/** How often APK Manager checks for updates in the background. */
+enum class UpdateCheckInterval(
+    val hours: Long,
+) {
+    Every6Hours(6),
+    Every12Hours(12),
+    Every24Hours(24),
+}
 
 /** Whether the app follows the system theme or always uses a light or dark theme. */
 enum class ThemeMode {

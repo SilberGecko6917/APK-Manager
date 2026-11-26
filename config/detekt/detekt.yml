@@ -30,6 +30,8 @@ complexity:
 
 style:
   MagicNumber:
+    # Enum entries name their values, e.g. update intervals in hours.
+    ignoreEnums: true
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
     ignoreAnnotated:

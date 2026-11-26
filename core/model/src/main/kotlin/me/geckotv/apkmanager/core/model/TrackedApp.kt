@@ -31,6 +31,8 @@ data class TrackedApp(
     val addedAt: Instant,
     /** When the latest release was last checked successfully. */
     val lastCheckedAt: Instant?,
+    /** GitHub ID of the release the user was last notified about, `null` if none. */
+    val notifiedReleaseId: Long? = null,
 ) {
     /** Whether an update is available, see [UpdateStatus]. */
     val updateStatus: UpdateStatus

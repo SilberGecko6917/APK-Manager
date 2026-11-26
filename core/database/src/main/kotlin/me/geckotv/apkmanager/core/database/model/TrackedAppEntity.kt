@@ -42,4 +42,7 @@ data class TrackedAppEntity(
     /** ETag of the last release response, sent as `If-None-Match` by unauthenticated checks. */
     @ColumnInfo(name = "release_etag")
     val releaseEtag: String?,
+    /** GitHub ID of the release the user was last notified about, so each update is notified once. */
+    @ColumnInfo(name = "notified_release_id")
+    val notifiedReleaseId: Long? = null,
 )

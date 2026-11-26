@@ -138,6 +138,13 @@ internal class OfflineFirstTrackedAppsRepository
             dao.setPreferredAssetName(id, assetName)
         }
 
+        override suspend fun setNotifiedRelease(
+            id: Long,
+            releaseId: Long,
+        ) {
+            dao.setNotifiedRelease(id, releaseId)
+        }
+
         override suspend fun setIncludePrereleases(
             id: Long,
             includePrereleases: Boolean,
