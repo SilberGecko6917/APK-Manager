@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -33,6 +38,10 @@ import me.geckotv.apkmanager.feature.account.AccountRoute
 import me.geckotv.apkmanager.feature.account.navigation.AccountNavKey
 import me.geckotv.apkmanager.feature.apps.AddAppFloatingActionButton
 import me.geckotv.apkmanager.feature.apps.AppsRoute
+import me.geckotv.apkmanager.feature.apps.InstallConfirmations
+import me.geckotv.apkmanager.feature.apps.details.AppDetailsPlaceholder
+import me.geckotv.apkmanager.feature.apps.details.AppDetailsRoute
+import me.geckotv.apkmanager.feature.apps.navigation.AppDetailsNavKey
 import me.geckotv.apkmanager.feature.apps.navigation.AppsNavKey
 import me.geckotv.apkmanager.feature.onboarding.OnboardingRoute
 import me.geckotv.apkmanager.feature.settings.SettingsRoute
@@ -40,6 +49,7 @@ import me.geckotv.apkmanager.feature.settings.navigation.SettingsNavKey
 import me.geckotv.apkmanager.navigation.TopLevelDestination
 import me.geckotv.apkmanager.navigation.currentTopLevelDestination
 import me.geckotv.apkmanager.navigation.navigateToTopLevel
+import me.geckotv.apkmanager.navigation.openAppDetails
 
 /** Space screens keep free at their bottom so the floating navigation toolbar does not cover content. */
 private val NavigationToolbarClearance = 96.dp
@@ -67,44 +77,33 @@ fun ApkManagerApp(
     }
 }
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 private fun MainNavigation(modifier: Modifier = Modifier) {
     val backStack = rememberNavBackStack(TopLevelDestination.entries.first().navKey)
     val currentDestination = backStack.currentTopLevelDestination()
-    // The toolbar is only shown on top-level destinations, not on detail screens such as the account.
-    val showNavigationToolbar = TopLevelDestination.entries.any { it.navKey == backStack.lastOrNull() }
+    val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>()
+    // On wide windows, the details of an app are shown next to the apps list.
+    val isTwoPane = listDetailStrategy.directive.maxHorizontalPartitions > 1
+    val showsAppDetailsNextToList = isTwoPane && backStack.lastOrNull() is AppDetailsNavKey
+    // The toolbar is only shown on top-level destinations, not on detail screens such as the account. It stays
+    // while the apps list is shown with the details of an app next to it.
+    val showNavigationToolbar =
+        TopLevelDestination.entries.any { it.navKey == backStack.lastOrNull() } ||
+            (showsAppDetailsNextToList && currentDestination == TopLevelDestination.Apps)
     var showAddAppSheet by rememberSaveable { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize()) {
-        NavDisplay(
+        MainNavDisplay(
             backStack = backStack,
-            onBack = { backStack.removeLastOrNull() },
-            entryDecorators =
-                listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberViewModelStoreNavEntryDecorator(),
-                ),
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            popTransitionSpec = { fadeIn() togetherWith fadeOut() },
-            entryProvider =
-                entryProvider {
-                    entry<AppsNavKey> {
-                        AppsRoute(
-                            showAddAppSheet = showAddAppSheet,
-                            onAddAppSheetDismiss = { showAddAppSheet = false },
-                            onAddAppClick = { showAddAppSheet = true },
-                            bottomContentPadding = NavigationToolbarClearance,
-                        )
-                    }
-                    entry<SettingsNavKey> {
-                        SettingsRoute(
-                            onOpenAccount = { backStack.add(AccountNavKey) },
-                            bottomContentPadding = NavigationToolbarClearance,
-                        )
-                    }
-                    entry<AccountNavKey> { AccountRoute(onBack = { backStack.removeLastOrNull() }) }
-                },
+            sceneStrategy = listDetailStrategy,
+            isTwoPane = isTwoPane,
+            showAddAppSheet = showAddAppSheet,
+            onShowAddAppSheetChange = { showAddAppSheet = it },
         )
+
+        // Install confirmations come from the system dialog, whatever screen is shown.
+        InstallConfirmations()
 
         AnimatedVisibility(
             visible = showNavigationToolbar,
@@ -123,6 +122,61 @@ private fun MainNavigation(modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+/** The screens of the app. Wide windows show the details of an app next to the apps list. */
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+private fun MainNavDisplay(
+    backStack: NavBackStack<NavKey>,
+    sceneStrategy: ListDetailSceneStrategy<NavKey>,
+    isTwoPane: Boolean,
+    showAddAppSheet: Boolean,
+    onShowAddAppSheetChange: (Boolean) -> Unit,
+) {
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryDecorators =
+            listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator(),
+            ),
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        popTransitionSpec = { fadeIn() togetherWith fadeOut() },
+        sceneStrategies = listOf(sceneStrategy),
+        entryProvider =
+            entryProvider {
+                entry<AppsNavKey>(
+                    metadata =
+                        ListDetailSceneStrategy.listPane(
+                            detailPlaceholder = { AppDetailsPlaceholder() },
+                        ),
+                ) {
+                    AppsRoute(
+                        showAddAppSheet = showAddAppSheet,
+                        onAddAppSheetDismiss = { onShowAddAppSheetChange(false) },
+                        onAddAppClick = { onShowAddAppSheetChange(true) },
+                        onAppClick = { appId -> backStack.openAppDetails(appId) },
+                        bottomContentPadding = NavigationToolbarClearance,
+                    )
+                }
+                entry<AppDetailsNavKey>(metadata = ListDetailSceneStrategy.detailPane()) { key ->
+                    AppDetailsRoute(
+                        appId = key.appId,
+                        onBack = { backStack.removeLastOrNull() },
+                        bottomContentPadding = if (isTwoPane) NavigationToolbarClearance else 0.dp,
+                    )
+                }
+                entry<SettingsNavKey> {
+                    SettingsRoute(
+                        onOpenAccount = { backStack.add(AccountNavKey) },
+                        bottomContentPadding = NavigationToolbarClearance,
+                    )
+                }
+                entry<AccountNavKey> { AccountRoute(onBack = { backStack.removeLastOrNull() }) }
+            },
+    )
 }
 
 @Composable
