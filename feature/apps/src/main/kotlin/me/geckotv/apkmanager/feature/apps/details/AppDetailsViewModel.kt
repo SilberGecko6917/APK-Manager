@@ -1,5 +1,6 @@
 package me.geckotv.apkmanager.feature.apps.details
 
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -21,11 +22,15 @@ import kotlinx.coroutines.launch
 import me.geckotv.apkmanager.core.data.repository.DeviceInfo
 import me.geckotv.apkmanager.core.data.repository.InstalledAppsRepository
 import me.geckotv.apkmanager.core.data.repository.TrackedAppsRepository
+import me.geckotv.apkmanager.core.datastore.UserSettingsRepository
 import me.geckotv.apkmanager.core.installer.AppInstaller
 import me.geckotv.apkmanager.core.installer.InstallState
 import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.InstalledApp
 import me.geckotv.apkmanager.core.model.SourceResult
+import me.geckotv.apkmanager.core.model.TrackedApp
+import me.geckotv.apkmanager.core.model.UnattendedUpdates
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.feature.apps.toItem
 import me.geckotv.apkmanager.feature.apps.toMessage
 
@@ -45,6 +50,7 @@ class AppDetailsViewModel
         private val installedAppsRepository: InstalledAppsRepository,
         private val appInstaller: AppInstaller,
         private val deviceInfo: DeviceInfo,
+        private val userSettingsRepository: UserSettingsRepository,
     ) : ViewModel() {
         @AssistedFactory
         interface Factory {
@@ -63,7 +69,8 @@ class AppDetailsViewModel
                 trackedAppsRepository.observeTrackedApp(appId),
                 appInstaller.installs,
                 localState,
-            ) { app, installs, local ->
+                userSettingsRepository.settings,
+            ) { app, installs, local, settings ->
                 if (app == null) {
                     AppDetailsUiState.Loading
                 } else {
@@ -74,6 +81,8 @@ class AppDetailsViewModel
                         isConfirmingRemove = local.isConfirmingRemove,
                         expandedReleaseId = local.expandedReleaseId,
                         optionsSheet = local.optionsSheet,
+                        defaultUpdatePolicy = settings.defaultUpdatePolicy,
+                        confirmHint = app.confirmHint(deviceInfo),
                     )
                 }
             }.stateIn(
@@ -179,6 +188,17 @@ class AppDetailsViewModel
             viewModelScope.launch { trackedAppsRepository.setVersionPattern(appId, trimmed) }
         }
 
+        /** Shows the sheet to choose what happens when an update is found. */
+        fun showUpdatePolicy() {
+            localState.update { it.copy(optionsSheet = OptionsSheet.UpdatePolicySheet) }
+        }
+
+        /** Saves what happens when an update is found and closes the sheet; `null` follows the settings default. */
+        fun setUpdatePolicy(policy: UpdatePolicy?) {
+            dismissOptionsSheet()
+            viewModelScope.launch { trackedAppsRepository.setUpdatePolicy(appId, policy) }
+        }
+
         /** Closes the sheet to edit an advanced option without saving. */
         fun dismissOptionsSheet() {
             localState.update { it.copy(optionsSheet = null) }
@@ -247,3 +267,18 @@ class AppDetailsViewModel
             const val STOP_TIMEOUT_MILLIS = 5_000L
         }
     }
+
+/** Why Android asks to confirm the automatic updates of this app, `null` if it does not or the app is not installed. */
+private fun TrackedApp.confirmHint(deviceInfo: DeviceInfo): UpdateConfirmHint? {
+    val installed = installedApp ?: return null
+    return when {
+        UnattendedUpdates.isPossible(installed, deviceInfo.ownPackageName, deviceInfo.sdkInt) -> null
+
+        deviceInfo.sdkInt < Build.VERSION_CODES.S -> UpdateConfirmHint.OldAndroid
+
+        installed.packageName != deviceInfo.ownPackageName &&
+            installed.installerPackageName != deviceInfo.ownPackageName -> UpdateConfirmHint.AnotherInstaller
+
+        else -> UpdateConfirmHint.OldTargetSdk
+    }
+}

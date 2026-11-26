@@ -18,6 +18,7 @@ import me.geckotv.apkmanager.core.model.InstalledRelease
 import me.geckotv.apkmanager.core.model.RepositoryPreview
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.model.UpdateStatus
 import me.geckotv.apkmanager.core.network.model.GitHubError
 import me.geckotv.apkmanager.core.network.model.RepositoryRef
@@ -398,9 +399,13 @@ class OfflineFirstTrackedAppsRepositoryTest {
             repository.setAssetFilter(id, AssetFilter(include = "foss", exclude = " "))
             repository.setVersionPattern(id, "(\\d+)")
             repository.setInstalledRelease(id, releaseId = 1, versionCode = 1)
+            repository.setUpdatePolicy(id, UpdatePolicy.Install)
+            repository.setAutoUpdateRelease(id, releaseId = 1)
 
             repository.observeTrackedApp(id).test {
                 val app = awaitItem()!!
+                assertEquals(UpdatePolicy.Install, app.updatePolicy)
+                assertEquals(1L, app.autoUpdateReleaseId)
                 assertEquals(AssetFilter(include = "foss", exclude = null), app.assetFilter)
                 assertEquals("(\\d+)", app.versionPattern)
                 assertEquals(InstalledRelease(releaseId = 1, versionCode = 1), app.installedRelease)

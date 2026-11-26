@@ -9,4 +9,7 @@ interface UpdateNotifier {
      * notifications of apps that are up to date now.
      */
     suspend fun notifyUpdates(apps: List<TrackedApp>)
+
+    /** Shows a notification for every app that was updated automatically. */
+    suspend fun notifyAutoUpdates(updates: List<AutoUpdate>)
 }

@@ -93,6 +93,18 @@ interface TrackedAppDao {
         releaseId: Long?,
     )
 
+    @Query("UPDATE tracked_apps SET update_policy = :policy WHERE id = :id")
+    suspend fun setUpdatePolicy(
+        id: Long,
+        policy: String?,
+    )
+
+    @Query("UPDATE tracked_apps SET auto_update_release_id = :releaseId WHERE id = :id")
+    suspend fun setAutoUpdateRelease(
+        id: Long,
+        releaseId: Long,
+    )
+
     @Query("UPDATE tracked_apps SET notified_release_id = :releaseId WHERE id = :id")
     suspend fun setNotifiedRelease(
         id: Long,

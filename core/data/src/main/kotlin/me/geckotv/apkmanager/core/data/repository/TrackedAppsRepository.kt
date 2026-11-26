@@ -8,6 +8,7 @@ import me.geckotv.apkmanager.core.model.RepositoryPreview
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
 import me.geckotv.apkmanager.core.model.TrackedApp
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 
 /**
  * The apps the user tracks and their releases. It has one function per operation on tracked apps;
@@ -90,6 +91,18 @@ interface TrackedAppsRepository {
     suspend fun setSkippedRelease(
         id: Long,
         releaseId: Long?,
+    )
+
+    /** Sets what to do with updates of app [id]; `null` follows the default in the settings. */
+    suspend fun setUpdatePolicy(
+        id: Long,
+        policy: UpdatePolicy?,
+    )
+
+    /** Remembers that APK Manager tried to install release [releaseId] of app [id] automatically. */
+    suspend fun setAutoUpdateRelease(
+        id: Long,
+        releaseId: Long,
     )
 
     /** Remembers that the user was notified about release [releaseId] of app [id]. */

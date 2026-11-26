@@ -10,6 +10,7 @@ import me.geckotv.apkmanager.core.model.InstalledRelease
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.ReleaseAsset
 import me.geckotv.apkmanager.core.model.TrackedApp
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import java.time.Instant
 
 internal fun Release.toEntity(appId: Long): LatestReleaseEntity =
@@ -87,4 +88,6 @@ internal fun TrackedAppWithRelease.toTrackedApp(installedApp: InstalledApp?): Tr
                 app.installedVersionCode?.let { versionCode -> InstalledRelease(releaseId, versionCode) }
             },
         skippedReleaseId = app.skippedReleaseId,
+        updatePolicy = app.updatePolicy?.let { name -> UpdatePolicy.entries.firstOrNull { it.name == name } },
+        autoUpdateReleaseId = app.autoUpdateReleaseId,
     )

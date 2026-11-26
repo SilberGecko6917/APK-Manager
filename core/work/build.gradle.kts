@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.core.data)
     implementation(projects.core.datastore)
+    implementation(projects.core.installer)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.hilt.work)
     implementation(libs.androidx.work.runtime)

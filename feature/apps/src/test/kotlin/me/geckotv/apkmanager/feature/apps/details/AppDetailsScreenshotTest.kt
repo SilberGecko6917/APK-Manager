@@ -21,6 +21,7 @@ import me.geckotv.apkmanager.core.model.InstalledRelease
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.TrackedApp
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.testing.TestData
 import me.geckotv.apkmanager.feature.apps.AppItem
 import me.geckotv.apkmanager.feature.apps.AppsScreen
@@ -86,6 +87,33 @@ class AppDetailsScreenshotTest {
     @Config(qualifiers = "w411dp-h580dp-xxhdpi")
     fun versionPatternSheetDark() =
         capture("app_details_version_pattern_dark", darkTheme = true) { VersionPatternSheet(pattern = "release-(.*)") }
+
+    @Test
+    @Config(qualifiers = "w411dp-h560dp-xxhdpi")
+    fun updatePolicySheetLight() =
+        capture("app_details_update_policy_light", darkTheme = false) {
+            SheetSurface {
+                UpdatePolicySheetContent(
+                    selected = null,
+                    defaultPolicy = UpdatePolicy.Notify,
+                    confirmHint = UpdateConfirmHint.AnotherInstaller,
+                    onSelect = {},
+                )
+            }
+        }
+
+    @Test
+    fun detailsConfirmHintDark() =
+        capture("app_details_update_confirm_hint_dark", darkTheme = true) {
+            Details(
+                updateAvailable().let { state ->
+                    state.copy(
+                        item = state.item.copy(app = state.item.app.copy(updatePolicy = UpdatePolicy.Install)),
+                        confirmHint = UpdateConfirmHint.AnotherInstaller,
+                    )
+                },
+            )
+        }
 
     @Test
     fun detailsDownloadingLight() =

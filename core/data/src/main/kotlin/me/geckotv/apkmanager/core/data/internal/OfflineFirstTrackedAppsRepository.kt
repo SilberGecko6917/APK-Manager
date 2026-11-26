@@ -22,6 +22,7 @@ import me.geckotv.apkmanager.core.model.RepositoryPreview
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
 import me.geckotv.apkmanager.core.model.TrackedApp
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.network.GitHubNetworkDataSource
 import me.geckotv.apkmanager.core.network.model.GitHubError
 import me.geckotv.apkmanager.core.network.model.GitHubResult
@@ -181,6 +182,20 @@ internal class OfflineFirstTrackedAppsRepository
             releaseId: Long?,
         ) {
             dao.setSkippedRelease(id, releaseId)
+        }
+
+        override suspend fun setUpdatePolicy(
+            id: Long,
+            policy: UpdatePolicy?,
+        ) {
+            dao.setUpdatePolicy(id, policy?.name)
+        }
+
+        override suspend fun setAutoUpdateRelease(
+            id: Long,
+            releaseId: Long,
+        ) {
+            dao.setAutoUpdateRelease(id, releaseId)
         }
 
         override suspend fun setNotifiedRelease(

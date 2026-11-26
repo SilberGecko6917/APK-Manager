@@ -3,6 +3,7 @@ package me.geckotv.apkmanager.feature.apps.details
 import me.geckotv.apkmanager.core.model.InstalledApp
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.SourceError
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.feature.apps.AppItem
 import me.geckotv.apkmanager.feature.apps.AppsMessage
 
@@ -17,6 +18,8 @@ sealed interface AppDetailsUiState {
      * @property isConfirmingRemove whether the user is asked to confirm that the app is removed.
      * @property expandedReleaseId the release of the history whose notes are shown, if any.
      * @property optionsSheet the sheet to edit an advanced option that is shown, `null` if none is.
+     * @property defaultUpdatePolicy the update policy of apps that have none of their own, from the settings.
+     * @property confirmHint why Android asks to confirm automatic updates of the installed app, `null` if it does not.
      */
     data class Ready(
         val item: AppItem,
@@ -25,6 +28,8 @@ sealed interface AppDetailsUiState {
         val isConfirmingRemove: Boolean,
         val expandedReleaseId: Long?,
         val optionsSheet: OptionsSheet? = null,
+        val defaultUpdatePolicy: UpdatePolicy = UpdatePolicy.Notify,
+        val confirmHint: UpdateConfirmHint? = null,
     ) : AppDetailsUiState
 }
 
@@ -41,6 +46,21 @@ sealed interface OptionsSheet {
 
     /** The sheet for the pattern that extracts the version from release tags. */
     data object VersionPatternSheet : OptionsSheet
+
+    /** The sheet for what happens when an update is found. */
+    data object UpdatePolicySheet : OptionsSheet
+}
+
+/** Why Android asks the user to confirm each automatic update of an installed app. */
+enum class UpdateConfirmHint {
+    /** Another app installed it, so only that app can update it without asking. */
+    AnotherInstaller,
+
+    /** APK Manager installed it, but it targets an older Android version than Android allows. */
+    OldTargetSdk,
+
+    /** This Android version is older than 12 and always asks. */
+    OldAndroid,
 }
 
 /** The newest releases of an app, loaded from the source. */

@@ -122,6 +122,8 @@ fun AppDetailsRoute(
                 onAssetFilterSave = viewModel::saveAssetFilter,
                 onVersionPatternClick = viewModel::showVersionPattern,
                 onVersionPatternSave = viewModel::saveVersionPattern,
+                onUpdatePolicyClick = viewModel::showUpdatePolicy,
+                onUpdatePolicySelect = viewModel::setUpdatePolicy,
                 onDismiss = viewModel::dismissOptionsSheet,
             ),
         modifier = modifier,
@@ -244,10 +246,14 @@ private fun AppDetailsList(
                 WhatsNewCard(it, isInstalled = app.isInstalledRelease(it))
             }
         }
-        section(items = SettingsRow.entries, title = settingsTitle, key = { it }) { row ->
+        // The update policy only matters for an app that is installed and gets updates.
+        val settingsRows = SettingsRow.entries.filter { it != SettingsRow.Updates || app.installedApp != null }
+        section(items = settingsRows, title = settingsTitle, key = { it }) { row ->
             SettingsItem(
                 row = row,
                 app = app,
+                state = state,
+                onUpdatePolicyClick = options.onUpdatePolicyClick,
                 onIncludePrereleasesChange = onIncludePrereleasesChange,
                 onInstalledAppClick = onInstalledAppClick,
                 onOpenRepositoryClick = { uriHandler.openUri(app.repository.htmlUrl) },
@@ -270,6 +276,7 @@ private fun AppDetailsList(
 
 private enum class SettingsRow {
     IncludePrereleases,
+    Updates,
     InstalledApp,
     OpenRepository,
 }
@@ -278,6 +285,8 @@ private enum class SettingsRow {
 private fun SettingsItem(
     row: SettingsRow,
     app: TrackedApp,
+    state: AppDetailsUiState.Ready,
+    onUpdatePolicyClick: () -> Unit,
     onIncludePrereleasesChange: (Boolean) -> Unit,
     onInstalledAppClick: () -> Unit,
     onOpenRepositoryClick: () -> Unit,
@@ -290,6 +299,18 @@ private fun SettingsItem(
                 onCheckedChange = onIncludePrereleasesChange,
                 supportingText = stringResource(R.string.feature_apps_include_prereleases_summary),
                 leadingContent = { SectionItemIcon(ApkManagerIcons.Upgrade) },
+            )
+        }
+
+        SettingsRow.Updates -> {
+            SectionItem(
+                headline = stringResource(R.string.feature_apps_updates_title),
+                supportingText = updatePolicySummary(app.updatePolicy, state.defaultUpdatePolicy, state.confirmHint),
+                leadingContent = { SectionItemIcon(ApkManagerIcons.Download) },
+                trailingContent = {
+                    Icon(painter = painterResource(ApkManagerIcons.ChevronRight), contentDescription = null)
+                },
+                onClick = onUpdatePolicyClick,
             )
         }
 

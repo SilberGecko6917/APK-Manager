@@ -4,6 +4,7 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import me.geckotv.apkmanager.core.designsystem.theme.ApkManagerTheme
 import me.geckotv.apkmanager.core.model.GitHubAccount
 import me.geckotv.apkmanager.core.model.ThemeMode
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.model.UserSettings
 import me.geckotv.apkmanager.core.testing.FakeAuthRepository
 import org.junit.Test
@@ -36,6 +37,18 @@ class SettingsScreenScreenshotTest {
             account = FakeAuthRepository.sampleAccount(),
         )
 
+    @Test
+    fun settingsAutomaticUpdatesLight() =
+        capture(
+            "settings_automatic_updates_light",
+            UserSettings(
+                themeMode = ThemeMode.Light,
+                defaultUpdatePolicy = UpdatePolicy.Install,
+                autoUpdateOnlyWhileCharging = true,
+            ),
+            darkTheme = false,
+        )
+
     private fun capture(
         name: String,
         settings: UserSettings,
@@ -55,6 +68,7 @@ class SettingsScreenScreenshotTest {
                     onBackgroundChecksChange = {},
                     onCheckIntervalChange = {},
                     onUnmeteredOnlyChange = {},
+                    automaticUpdates = AutomaticUpdatesActions(),
                     onOpenSourceCode = {},
                     onOpenLicense = {},
                     onOpenAccount = {},

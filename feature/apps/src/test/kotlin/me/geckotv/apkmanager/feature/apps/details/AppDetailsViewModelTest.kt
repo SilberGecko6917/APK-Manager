@@ -17,11 +17,13 @@ import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
 import me.geckotv.apkmanager.core.model.TrackedApp
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.model.UpdateStatus
 import me.geckotv.apkmanager.core.testing.FakeAppInstaller
 import me.geckotv.apkmanager.core.testing.FakeDeviceInfo
 import me.geckotv.apkmanager.core.testing.FakeInstalledAppsRepository
 import me.geckotv.apkmanager.core.testing.FakeTrackedAppsRepository
+import me.geckotv.apkmanager.core.testing.FakeUserSettingsRepository
 import me.geckotv.apkmanager.core.testing.MainDispatcherRule
 import me.geckotv.apkmanager.core.testing.TestData
 import me.geckotv.apkmanager.feature.apps.AppsMessage
@@ -47,6 +49,7 @@ class AppDetailsViewModelTest {
     private val installedApps = FakeInstalledAppsRepository()
     private val installer = FakeAppInstaller()
     private val deviceInfo = FakeDeviceInfo()
+    private val userSettings = FakeUserSettingsRepository()
     private val releases = listOf(TestData.release(11, "v1.1.0"), TestData.release(10, "v1.0.0"))
 
     @Test
@@ -106,7 +109,7 @@ class AppDetailsViewModelTest {
                 object : TrackedAppsRepository by trackedApps {
                     override suspend fun releaseHistory(id: Long) = history.await()
                 }
-            val viewModel = AppDetailsViewModel(1, repository, installedApps, installer, deviceInfo)
+            val viewModel = AppDetailsViewModel(1, repository, installedApps, installer, deviceInfo, userSettings)
             collectUiState(viewModel)
             assertEquals(ReleaseHistoryState.Loading, viewModel.ready().history)
 
@@ -418,6 +421,104 @@ class AppDetailsViewModelTest {
         }
 
     @Test
+    fun theUpdatePolicySheetShowsTheDefaultFromTheSettings() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            assertEquals(UpdatePolicy.Notify, viewModel.ready().defaultUpdatePolicy)
+
+            userSettings.setDefaultUpdatePolicy(UpdatePolicy.Install)
+            viewModel.showUpdatePolicy()
+
+            assertEquals(UpdatePolicy.Install, viewModel.ready().defaultUpdatePolicy)
+            assertEquals(OptionsSheet.UpdatePolicySheet, viewModel.ready().optionsSheet)
+        }
+
+    @Test
+    fun choosingAnUpdatePolicySavesItAndClosesTheSheet() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            viewModel.showUpdatePolicy()
+
+            viewModel.setUpdatePolicy(UpdatePolicy.Install)
+
+            assertNull(viewModel.ready().optionsSheet)
+            assertEquals(
+                UpdatePolicy.Install,
+                viewModel
+                    .ready()
+                    .item.app.updatePolicy,
+            )
+
+            viewModel.setUpdatePolicy(null)
+
+            assertNull(
+                viewModel
+                    .ready()
+                    .item.app.updatePolicy,
+            )
+        }
+
+    @Test
+    fun dismissingTheUpdatePolicySheetKeepsThePolicy() =
+        runTest {
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            viewModel.showUpdatePolicy()
+
+            viewModel.dismissOptionsSheet()
+
+            assertNull(viewModel.ready().optionsSheet)
+            assertNull(
+                viewModel
+                    .ready()
+                    .item.app.updatePolicy,
+            )
+        }
+
+    @Test
+    fun automaticUpdatesOfAnAppFromAnotherInstallerNeedConfirmation() =
+        runTest {
+            setInstalledApp(installer = "com.android.vending")
+
+            assertEquals(UpdateConfirmHint.AnotherInstaller, confirmHint())
+        }
+
+    @Test
+    fun automaticUpdatesOfAnAppInstalledByApkManagerNeedNoConfirmation() =
+        runTest {
+            setInstalledApp(installer = deviceInfo.ownPackageName)
+
+            assertNull(confirmHint())
+        }
+
+    @Test
+    fun automaticUpdatesOfAnAppWithAnOldTargetNeedConfirmation() =
+        runTest {
+            setInstalledApp(installer = deviceInfo.ownPackageName, targetSdk = 21)
+
+            assertEquals(UpdateConfirmHint.OldTargetSdk, confirmHint())
+        }
+
+    @Test
+    fun automaticUpdatesBeforeAndroid12NeedConfirmation() =
+        runTest {
+            setInstalledApp(installer = deviceInfo.ownPackageName)
+
+            assertEquals(UpdateConfirmHint.OldAndroid, confirmHint(FakeDeviceInfo(sdkInt = 30)))
+        }
+
+    @Test
+    fun anAppThatIsNotInstalledHasNoConfirmHint() =
+        runTest {
+            val viewModel = createViewModel(appId = 2)
+            collectUiState(viewModel)
+
+            assertNull(viewModel.ready().confirmHint)
+        }
+
+    @Test
     fun removingAsksForConfirmationFirst() =
         runTest {
             val viewModel = createViewModel(appId = 1)
@@ -469,7 +570,25 @@ class AppDetailsViewModelTest {
 
     /** Created after [MainDispatcherRule] has replaced the main dispatcher, so `viewModelScope` uses the test one. */
     private fun createViewModel(appId: Long) =
-        AppDetailsViewModel(appId, trackedApps, installedApps, installer, deviceInfo)
+        AppDetailsViewModel(appId, trackedApps, installedApps, installer, deviceInfo, userSettings)
+
+    private fun setInstalledApp(
+        installer: String?,
+        targetSdk: Int = 35,
+    ) {
+        val installed =
+            TestData.installedApp("com.example.app1", "alpha", "1.0.0").copy(
+                targetSdkVersion = targetSdk,
+                installerPackageName = installer,
+            )
+        trackedApps.setApps(listOf(app(1, "alpha", null).copy(installedApp = installed)))
+    }
+
+    private fun TestScope.confirmHint(device: FakeDeviceInfo = deviceInfo): UpdateConfirmHint? {
+        val viewModel = AppDetailsViewModel(1, trackedApps, installedApps, installer, device, userSettings)
+        collectUiState(viewModel)
+        return viewModel.ready().confirmHint
+    }
 
     private fun TestScope.collectUiState(viewModel: AppDetailsViewModel) {
         // uiState only collects its upstream while it has a subscriber.

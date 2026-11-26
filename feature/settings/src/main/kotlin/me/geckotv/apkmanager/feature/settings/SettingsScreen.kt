@@ -85,6 +85,12 @@ fun SettingsRoute(
         onBackgroundChecksChange = viewModel::setBackgroundChecksEnabled,
         onCheckIntervalChange = viewModel::setCheckInterval,
         onUnmeteredOnlyChange = viewModel::setCheckOnlyOnUnmeteredNetwork,
+        automaticUpdates =
+            AutomaticUpdatesActions(
+                onInstallAutomaticallyChange = viewModel::setInstallUpdatesAutomatically,
+                onUnmeteredOnlyChange = viewModel::setAutoUpdateOnlyOnUnmeteredNetwork,
+                onChargingOnlyChange = viewModel::setAutoUpdateOnlyWhileCharging,
+            ),
         onOpenSourceCode = { uriHandler.openUri(SOURCE_CODE_URL) },
         onOpenLicense = { uriHandler.openUri(LICENSE_URL) },
         onOpenAccount = onOpenAccount,
@@ -105,6 +111,7 @@ internal fun SettingsScreen(
     onBackgroundChecksChange: (Boolean) -> Unit,
     onCheckIntervalChange: (UpdateCheckInterval) -> Unit,
     onUnmeteredOnlyChange: (Boolean) -> Unit,
+    automaticUpdates: AutomaticUpdatesActions,
     onOpenSourceCode: () -> Unit,
     onOpenLicense: () -> Unit,
     onOpenAccount: () -> Unit,
@@ -147,6 +154,7 @@ internal fun SettingsScreen(
                         onUnmeteredOnlyChange = onUnmeteredOnlyChange,
                     )
                 }
+                automaticUpdates(settings = uiState.settings, actions = automaticUpdates)
                 item(key = "appearance") {
                     AppearanceSettings(
                         settings = uiState.settings,
@@ -195,7 +203,7 @@ private fun UpdateSettings(
                         supportingText = stringResource(R.string.feature_settings_unmetered_only_summary),
                         checked = settings.checkOnlyOnUnmeteredNetwork,
                         onCheckedChange = onUnmeteredOnlyChange,
-                        leadingContent = { SectionItemIcon(ApkManagerIcons.Schedule) },
+                        leadingContent = { SectionItemIcon(ApkManagerIcons.Wifi) },
                     )
                 }
             }
@@ -422,6 +430,7 @@ private fun SettingsScreenPreviewContent() {
         onBackgroundChecksChange = {},
         onCheckIntervalChange = {},
         onUnmeteredOnlyChange = {},
+        automaticUpdates = AutomaticUpdatesActions(),
         onOpenSourceCode = {},
         onOpenLicense = {},
         onOpenAccount = {},

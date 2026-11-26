@@ -9,4 +9,9 @@
         <item quantity="one">%d update available</item>
         <item quantity="other">%d updates available</item>
     </plurals>
+    <string name="core_work_channel_auto_updates">Automatic updates</string>
+    <string name="core_work_channel_auto_updates_description">Apps that were updated automatically</string>
+    <string name="core_work_auto_update_title">%1$s was updated</string>
+    <string name="core_work_auto_update_text">Now on %1$s</string>
+    <string name="core_work_auto_updates_summary">Apps were updated</string>
 </resources>

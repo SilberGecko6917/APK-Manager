@@ -12,6 +12,7 @@ import me.geckotv.apkmanager.core.designsystem.component.section
 import me.geckotv.apkmanager.core.designsystem.icon.ApkManagerIcons
 import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.TrackedApp
+import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.feature.apps.R
 
 /** What the user can do besides installing the app: skip a release and edit the advanced options. */
@@ -22,6 +23,8 @@ internal data class AppDetailsOptionsActions(
     val onAssetFilterSave: (include: String, exclude: String) -> Unit = { _, _ -> },
     val onVersionPatternClick: () -> Unit = {},
     val onVersionPatternSave: (String) -> Unit = {},
+    val onUpdatePolicyClick: () -> Unit = {},
+    val onUpdatePolicySelect: (UpdatePolicy?) -> Unit = {},
     val onDismiss: () -> Unit = {},
 )
 
@@ -117,6 +120,15 @@ internal fun OptionsSheets(
                             ),
                         onSaveClick = options.onVersionPatternSave,
                         onCancelClick = options.onDismiss,
+                    )
+                }
+
+                OptionsSheet.UpdatePolicySheet -> {
+                    UpdatePolicySheetContent(
+                        selected = app.updatePolicy,
+                        defaultPolicy = state.defaultUpdatePolicy,
+                        confirmHint = state.confirmHint,
+                        onSelect = options.onUpdatePolicySelect,
                     )
                 }
             }

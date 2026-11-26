@@ -41,7 +41,17 @@ data class TrackedApp(
     val installedRelease: InstalledRelease? = null,
     /** GitHub ID of a release the user chose to skip; it does not count as an update. */
     val skippedReleaseId: Long? = null,
+    /** What to do when a background check finds an update; `null` follows the default in the settings. */
+    val updatePolicy: UpdatePolicy? = null,
+    /**
+     * GitHub ID of the release APK Manager last tried to install automatically. It does not try the
+     * same release again, e.g. after the user declined the installation or the APK was rejected.
+     */
+    val autoUpdateReleaseId: Long? = null,
 ) {
+    /** The [updatePolicy] of this app, or [default] if it has none. */
+    fun effectiveUpdatePolicy(default: UpdatePolicy): UpdatePolicy = updatePolicy ?: default
+
     /** Whether an update is available, see [UpdateStatus]. */
     val updateStatus: UpdateStatus
         get() =
