@@ -5,10 +5,13 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import me.geckotv.apkmanager.core.auth.AuthRepository
+import me.geckotv.apkmanager.core.auth.AuthState
 import me.geckotv.apkmanager.core.datastore.UserSettingsRepository
+import me.geckotv.apkmanager.core.model.GitHubAccount
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
@@ -19,15 +22,20 @@ class SettingsViewModel
     @Inject
     constructor(
         private val userSettingsRepository: UserSettingsRepository,
+        authRepository: AuthRepository,
     ) : ViewModel() {
         val uiState: StateFlow<SettingsUiState> =
-            userSettingsRepository.settings
-                .map<UserSettings, SettingsUiState>(SettingsUiState::Success)
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-                    initialValue = SettingsUiState.Loading,
-                )
+            combine(userSettingsRepository.settings, authRepository.authState) { settings, authState ->
+                SettingsUiState.Success(
+                    settings = settings,
+                    account = (authState as? AuthState.SignedIn)?.account,
+                    accountNeedsSignIn = (authState as? AuthState.SignedIn)?.tokenInvalid == true,
+                ) as SettingsUiState
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                initialValue = SettingsUiState.Loading,
+            )
 
         fun setThemeMode(themeMode: ThemeMode) {
             viewModelScope.launch { userSettingsRepository.setThemeMode(themeMode) }
@@ -65,7 +73,13 @@ class SettingsViewModel
 sealed interface SettingsUiState {
     data object Loading : SettingsUiState
 
+    /**
+     * @property account the signed-in GitHub account, `null` when signed out.
+     * @property accountNeedsSignIn the saved token expired or was revoked.
+     */
     data class Success(
         val settings: UserSettings,
+        val account: GitHubAccount? = null,
+        val accountNeedsSignIn: Boolean = false,
     ) : SettingsUiState
 }

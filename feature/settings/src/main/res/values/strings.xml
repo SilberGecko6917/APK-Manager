@@ -4,6 +4,10 @@
     <string name="feature_settings_account">Account</string>
     <string name="feature_settings_github_account">GitHub account</string>
     <string name="feature_settings_github_account_summary">Sign in for private repositories and higher API limits</string>
+    <string name="feature_settings_account_private">@%1$s · Private repositories</string>
+    <string name="feature_settings_account_public">@%1$s · Public repositories</string>
+    <string name="feature_settings_account_token">@%1$s · Personal access token</string>
+    <string name="feature_settings_account_expired">@%1$s · Sign-in expired, tap to sign in again</string>
     <string name="feature_settings_appearance">Appearance</string>
     <string name="feature_settings_updates">Updates</string>
     <string name="feature_settings_background_checks">Check for updates in the background</string>
