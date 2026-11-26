@@ -62,7 +62,7 @@ private fun AutomaticUpdateSettings(
                     checked = settings.autoUpdateOnlyOnUnmeteredNetwork,
                     onCheckedChange = actions.onUnmeteredOnlyChange,
                     enabled = enabled,
-                    leadingContent = { SectionItemIcon(ApkManagerIcons.Schedule) },
+                    leadingContent = { SectionItemIcon(ApkManagerIcons.Wifi) },
                 )
             }
             item {
@@ -72,7 +72,7 @@ private fun AutomaticUpdateSettings(
                     checked = settings.autoUpdateOnlyWhileCharging,
                     onCheckedChange = actions.onChargingOnlyChange,
                     enabled = enabled,
-                    leadingContent = { SectionItemIcon(ApkManagerIcons.Upgrade) },
+                    leadingContent = { SectionItemIcon(ApkManagerIcons.BatteryChargingFull) },
                 )
             }
         }

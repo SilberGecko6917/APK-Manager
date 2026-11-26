@@ -203,7 +203,7 @@ private fun UpdateSettings(
                         supportingText = stringResource(R.string.feature_settings_unmetered_only_summary),
                         checked = settings.checkOnlyOnUnmeteredNetwork,
                         onCheckedChange = onUnmeteredOnlyChange,
-                        leadingContent = { SectionItemIcon(ApkManagerIcons.Schedule) },
+                        leadingContent = { SectionItemIcon(ApkManagerIcons.Wifi) },
                     )
                 }
             }

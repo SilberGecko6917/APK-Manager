@@ -26,6 +26,9 @@ object ApkManagerIcons {
     val ArrowBack: Int = R.drawable.core_designsystem_ic_arrow_back
 
     @DrawableRes
+    val BatteryChargingFull: Int = R.drawable.core_designsystem_ic_battery_charging_full
+
+    @DrawableRes
     val BrightnessAuto: Int = R.drawable.core_designsystem_ic_brightness_auto
 
     @DrawableRes
@@ -123,4 +126,7 @@ object ApkManagerIcons {
 
     @DrawableRes
     val Warning: Int = R.drawable.core_designsystem_ic_warning
+
+    @DrawableRes
+    val Wifi: Int = R.drawable.core_designsystem_ic_wifi
 }
