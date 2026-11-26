@@ -2,6 +2,7 @@ package me.geckotv.apkmanager.core.datastore
 
 import kotlinx.coroutines.flow.Flow
 import me.geckotv.apkmanager.core.model.ThemeMode
+import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
 
 /** Reads and writes the [UserSettings]. */
@@ -20,4 +21,10 @@ interface UserSettingsRepository {
     suspend fun setOnboardingCompleted(onboardingCompleted: Boolean)
 
     suspend fun setSelfUpdatesTracked(selfUpdatesTracked: Boolean)
+
+    suspend fun setBackgroundChecksEnabled(backgroundChecksEnabled: Boolean)
+
+    suspend fun setCheckInterval(checkInterval: UpdateCheckInterval)
+
+    suspend fun setCheckOnlyOnUnmeteredNetwork(checkOnlyOnUnmeteredNetwork: Boolean)
 }

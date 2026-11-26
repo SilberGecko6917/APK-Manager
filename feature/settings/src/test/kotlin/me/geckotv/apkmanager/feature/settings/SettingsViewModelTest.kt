@@ -6,6 +6,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import me.geckotv.apkmanager.core.model.ThemeMode
+import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
 import me.geckotv.apkmanager.core.testing.FakeUserSettingsRepository
 import me.geckotv.apkmanager.core.testing.MainDispatcherRule
@@ -47,6 +48,9 @@ class SettingsViewModelTest {
             viewModel.setUseDynamicColor(false)
             viewModel.setUseAmoledBlack(true)
             viewModel.setHapticsEnabled(false)
+            viewModel.setBackgroundChecksEnabled(false)
+            viewModel.setCheckInterval(UpdateCheckInterval.Every6Hours)
+            viewModel.setCheckOnlyOnUnmeteredNetwork(true)
 
             assertEquals(
                 UserSettings(
@@ -54,6 +58,9 @@ class SettingsViewModelTest {
                     useDynamicColor = false,
                     useAmoledBlack = true,
                     hapticsEnabled = false,
+                    backgroundChecksEnabled = false,
+                    checkInterval = UpdateCheckInterval.Every6Hours,
+                    checkOnlyOnUnmeteredNetwork = true,
                 ),
                 repository.current,
             )

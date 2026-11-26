@@ -76,10 +76,13 @@ dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.designsystem)
     implementation(projects.core.model)
+    implementation(projects.core.work)
     implementation(projects.feature.account)
     implementation(projects.feature.apps)
     implementation(projects.feature.onboarding)
     implementation(projects.feature.settings)
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.androidx.work.runtime)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)

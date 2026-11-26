@@ -125,6 +125,7 @@ class TrackedAppDaoTest {
             dao.setPreferredAssetName(id, "app-arm64.apk")
             dao.setIncludePrereleases(id, includePrereleases = true)
             dao.setChecked(id, checkedAt = 42, etag = null)
+            dao.setNotifiedRelease(id, releaseId = 7)
 
             val app = dao.getTrackedApp(id)!!
             assertEquals("com.example.app", app.packageName)
@@ -132,6 +133,7 @@ class TrackedAppDaoTest {
             assertTrue(app.includePrereleases)
             assertEquals(42L, app.lastCheckedAt)
             assertNull(app.releaseEtag)
+            assertEquals(7L, app.notifiedReleaseId)
         }
 
     private fun trackedApp(

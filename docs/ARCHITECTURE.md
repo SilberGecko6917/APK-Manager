@@ -41,6 +41,7 @@ Exact versions live in `gradle/libs.versions.toml`.
 :core:database        Room database, DAOs, entities
 :core:datastore       Settings
 :core:data            Repositories: tracked apps, installed apps, update checking
+:core:work            Background update checks (WorkManager) and update notifications
 :core:installer       Download, verification, installer backends
 :core:testing         Test fakes and rules
 :feature:apps         Apps list, "Add app" flow
@@ -118,6 +119,13 @@ APK Manager has no server, so it cannot keep a client secret. GitHub's **OAuth d
   - It stops at the first rate limit error and reports the remaining apps as rate limited.
 - Adding an app looks up the repository and its 20 newest releases once, so the "Add app" sheet can switch between stable and pre-releases and pick an asset without further requests.
 - Installed apps are read through `PackageManager`, which needs `QUERY_ALL_PACKAGES` to see apps from other sources.
+
+### Background checks (`:core:work`)
+
+- `UpdateCheckScheduler` follows the settings: while background checks are on, a unique periodic WorkManager job runs every 6, 12 or 24 hours with a network constraint (any network, or unmetered only) and "battery not low"; turning checks off cancels it.
+- `UpdateCheckWorker` (`@HiltWorker`) runs the same `checkForUpdates()` as the app and retries with WorkManager's backoff when no app could be checked (e.g. offline).
+- `UpdateNotifier` posts one notification per app with an update, grouped under a summary, and only once per release (`tracked_apps.notified_release_id`). Notifications of apps that are up to date again are removed.
+- WorkManager is initialized on demand with Hilt's worker factory (`ApkManagerApplication` implements `Configuration.Provider`; the default initializer is removed in the manifest).
 
 ### Version detection
 

@@ -110,6 +110,13 @@ class FakeTrackedAppsRepository(
         update(id) { it.copy(preferredAssetName = assetName) }
     }
 
+    override suspend fun setNotifiedRelease(
+        id: Long,
+        releaseId: Long,
+    ) {
+        update(id) { it.copy(notifiedReleaseId = releaseId) }
+    }
+
     override suspend fun setIncludePrereleases(
         id: Long,
         includePrereleases: Boolean,

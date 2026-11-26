@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import me.geckotv.apkmanager.core.datastore.UserSettingsRepository
 import me.geckotv.apkmanager.core.model.ThemeMode
+import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
 import javax.inject.Inject
 
@@ -42,6 +43,18 @@ class SettingsViewModel
 
         fun setHapticsEnabled(hapticsEnabled: Boolean) {
             viewModelScope.launch { userSettingsRepository.setHapticsEnabled(hapticsEnabled) }
+        }
+
+        fun setBackgroundChecksEnabled(backgroundChecksEnabled: Boolean) {
+            viewModelScope.launch { userSettingsRepository.setBackgroundChecksEnabled(backgroundChecksEnabled) }
+        }
+
+        fun setCheckInterval(checkInterval: UpdateCheckInterval) {
+            viewModelScope.launch { userSettingsRepository.setCheckInterval(checkInterval) }
+        }
+
+        fun setCheckOnlyOnUnmeteredNetwork(checkOnlyOnUnmeteredNetwork: Boolean) {
+            viewModelScope.launch { userSettingsRepository.setCheckOnlyOnUnmeteredNetwork(checkOnlyOnUnmeteredNetwork) }
         }
 
         private companion object {

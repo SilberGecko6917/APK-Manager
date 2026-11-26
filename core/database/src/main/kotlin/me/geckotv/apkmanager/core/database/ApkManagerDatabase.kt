@@ -1,5 +1,6 @@
 package me.geckotv.apkmanager.core.database
 
+import androidx.room3.AutoMigration
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import me.geckotv.apkmanager.core.database.dao.TrackedAppDao
@@ -17,8 +18,12 @@ import me.geckotv.apkmanager.core.database.model.TrackedAppEntity
         LatestReleaseEntity::class,
         ReleaseAssetEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
+    autoMigrations = [
+        // 2: tracked_apps.notified_release_id
+        AutoMigration(from = 1, to = 2),
+    ],
 )
 abstract class ApkManagerDatabase : RoomDatabase() {
     abstract fun trackedAppDao(): TrackedAppDao

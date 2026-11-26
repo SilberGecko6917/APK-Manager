@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import me.geckotv.apkmanager.core.model.ThemeMode
+import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
 import java.io.IOException
 import javax.inject.Inject
@@ -53,6 +54,18 @@ internal class DataStoreUserSettingsRepository
             dataStore.edit { it[Keys.SELF_UPDATES_TRACKED] = selfUpdatesTracked }
         }
 
+        override suspend fun setBackgroundChecksEnabled(backgroundChecksEnabled: Boolean) {
+            dataStore.edit { it[Keys.BACKGROUND_CHECKS_ENABLED] = backgroundChecksEnabled }
+        }
+
+        override suspend fun setCheckInterval(checkInterval: UpdateCheckInterval) {
+            dataStore.edit { it[Keys.CHECK_INTERVAL] = checkInterval.name }
+        }
+
+        override suspend fun setCheckOnlyOnUnmeteredNetwork(checkOnlyOnUnmeteredNetwork: Boolean) {
+            dataStore.edit { it[Keys.CHECK_ONLY_ON_UNMETERED_NETWORK] = checkOnlyOnUnmeteredNetwork }
+        }
+
         private fun Preferences.toUserSettings(): UserSettings {
             val defaults = UserSettings()
             return UserSettings(
@@ -65,6 +78,13 @@ internal class DataStoreUserSettingsRepository
                 hapticsEnabled = this[Keys.HAPTICS_ENABLED] ?: defaults.hapticsEnabled,
                 onboardingCompleted = this[Keys.ONBOARDING_COMPLETED] ?: defaults.onboardingCompleted,
                 selfUpdatesTracked = this[Keys.SELF_UPDATES_TRACKED] ?: defaults.selfUpdatesTracked,
+                backgroundChecksEnabled = this[Keys.BACKGROUND_CHECKS_ENABLED] ?: defaults.backgroundChecksEnabled,
+                checkInterval =
+                    this[Keys.CHECK_INTERVAL]
+                        ?.let { name -> UpdateCheckInterval.entries.firstOrNull { it.name == name } }
+                        ?: defaults.checkInterval,
+                checkOnlyOnUnmeteredNetwork =
+                    this[Keys.CHECK_ONLY_ON_UNMETERED_NETWORK] ?: defaults.checkOnlyOnUnmeteredNetwork,
             )
         }
 
@@ -75,5 +95,8 @@ internal class DataStoreUserSettingsRepository
             val HAPTICS_ENABLED = booleanPreferencesKey("haptics_enabled")
             val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
             val SELF_UPDATES_TRACKED = booleanPreferencesKey("self_updates_tracked")
+            val BACKGROUND_CHECKS_ENABLED = booleanPreferencesKey("background_checks_enabled")
+            val CHECK_INTERVAL = stringPreferencesKey("check_interval")
+            val CHECK_ONLY_ON_UNMETERED_NETWORK = booleanPreferencesKey("check_only_on_unmetered_network")
         }
     }

@@ -62,6 +62,12 @@ interface TrackedAppDao {
         assetName: String?,
     )
 
+    @Query("UPDATE tracked_apps SET notified_release_id = :releaseId WHERE id = :id")
+    suspend fun setNotifiedRelease(
+        id: Long,
+        releaseId: Long,
+    )
+
     /** Records a successful release check at [checkedAt] (epoch milliseconds). */
     @Query("UPDATE tracked_apps SET last_checked_at = :checkedAt, release_etag = :etag WHERE id = :id")
     suspend fun setChecked(

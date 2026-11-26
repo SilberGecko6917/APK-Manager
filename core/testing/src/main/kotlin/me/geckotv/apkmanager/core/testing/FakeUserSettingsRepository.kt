@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import me.geckotv.apkmanager.core.datastore.UserSettingsRepository
 import me.geckotv.apkmanager.core.model.ThemeMode
+import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
 
 /** In-memory [UserSettingsRepository] for tests. */
@@ -34,4 +35,13 @@ class FakeUserSettingsRepository(
 
     override suspend fun setSelfUpdatesTracked(selfUpdatesTracked: Boolean) =
         state.update { it.copy(selfUpdatesTracked = selfUpdatesTracked) }
+
+    override suspend fun setBackgroundChecksEnabled(backgroundChecksEnabled: Boolean) =
+        state.update { it.copy(backgroundChecksEnabled = backgroundChecksEnabled) }
+
+    override suspend fun setCheckInterval(checkInterval: UpdateCheckInterval) =
+        state.update { it.copy(checkInterval = checkInterval) }
+
+    override suspend fun setCheckOnlyOnUnmeteredNetwork(checkOnlyOnUnmeteredNetwork: Boolean) =
+        state.update { it.copy(checkOnlyOnUnmeteredNetwork = checkOnlyOnUnmeteredNetwork) }
 }
