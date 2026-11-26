@@ -31,7 +31,7 @@ internal class ShizukuInstallService
             abort()
             process =
                 ProcessBuilder(
-                    "pm",
+                    PM,
                     "install",
                     "-r",
                     "-S",
@@ -68,5 +68,10 @@ internal class ShizukuInstallService
         override fun abort() {
             process?.destroy()
             process = null
+        }
+
+        private companion object {
+            /** Absolute, because the user service process may not have a usable PATH. */
+            const val PM = "/system/bin/pm"
         }
     }
