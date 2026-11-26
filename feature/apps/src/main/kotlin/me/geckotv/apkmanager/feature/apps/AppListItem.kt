@@ -87,7 +87,7 @@ private fun AppListItemTrailing(
                     modifier = Modifier.size(18.dp),
                 )
             }
-            if (item.install != null) {
+            if (item.install != null && installAction == null) {
                 InstallProgressIndicator(
                     state = item.install,
                     showProgressIndicator = showProgressIndicator,
@@ -122,6 +122,7 @@ internal fun InstallAction.labelRes(): Int =
     when (this) {
         InstallAction.Install -> R.string.feature_apps_install
         InstallAction.Update -> R.string.feature_apps_update
+        InstallAction.Confirm -> R.string.feature_apps_install_confirm
     }
 
 /** The text below an app's name: the versions that matter for its [UpdateStatus]. */

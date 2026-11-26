@@ -43,7 +43,11 @@ class FakeAppInstaller(
 
     override fun onConfirmationShown(appId: Long) {
         confirmationsShown += appId
-        if (state.value[appId] is InstallState.WaitingForUser) setState(appId, InstallState.Installing)
+        (state.value[appId] as? InstallState.WaitingForUser)?.let { setState(appId, it.copy(isShown = true)) }
+    }
+
+    override fun showConfirmationAgain(appId: Long) {
+        (state.value[appId] as? InstallState.WaitingForUser)?.let { setState(appId, it.copy(isShown = false)) }
     }
 
     override fun dismiss(appId: Long) {

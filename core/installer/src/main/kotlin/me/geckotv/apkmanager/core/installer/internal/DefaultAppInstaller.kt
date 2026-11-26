@@ -62,9 +62,20 @@ internal class DefaultAppInstaller
         }
 
         override fun onConfirmationShown(appId: Long) {
+            setConfirmationShown(appId, isShown = true)
+        }
+
+        override fun showConfirmationAgain(appId: Long) {
+            setConfirmationShown(appId, isShown = false)
+        }
+
+        private fun setConfirmationShown(
+            appId: Long,
+            isShown: Boolean,
+        ) {
             state.update { installs ->
-                when (installs[appId]) {
-                    is InstallState.WaitingForUser -> installs + (appId to InstallState.Installing)
+                when (val install = installs[appId]) {
+                    is InstallState.WaitingForUser -> installs + (appId to install.copy(isShown = isShown))
                     else -> installs
                 }
             }
