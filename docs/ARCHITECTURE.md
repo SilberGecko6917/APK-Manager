@@ -128,14 +128,17 @@ APK Manager has no server, so it cannot keep a client secret. GitHub's **OAuth d
 
 ### Version detection
 
-1. If the app was installed through APK Manager, compare the stored release ID / tag with the latest release.
-2. Otherwise, compare the release tag with the installed `versionName` using a tolerant version parser (`Version`): it takes the first number sequence (`v1.2.3`, `release-2024.05.01`), understands pre-release labels (`dev` < `alpha` < `beta` < `pre` < `rc` < final) and ignores other suffixes (`-foss`, `(45)`, `+build`). Tags without a number (`nightly`) are compared as normalized text; if they still differ, the status is "unknown". An optional per-app regex to extract the version from the tag follows in v0.2.
-3. After downloading, the APK's `versionCode` is authoritative.
+`UpdateStatus.of` decides in this order:
+
+1. **Skipped release:** if the user marked the latest release as skipped ("Skip this update"), the app is up to date until a newer release appears (`tracked_apps.skipped_release_id`).
+2. **Installed through APK Manager:** after a successful install the release ID and the APK's `versionCode` are stored (`installed_release_id`, `installed_version_code`). As long as the installed `versionCode` is unchanged, the same release ID means "up to date", whatever the tag says. Installing a release clears the skipped release.
+3. **Otherwise**, the version is taken from the tag (with the optional per-app regex: its first group, or the whole match) and compared with the installed `versionName` using a tolerant version parser (`Version`): it takes the first number sequence (`v1.2.3`, `release-2024.05.01`), understands pre-release labels (`dev` < `alpha` < `beta` < `pre` < `rc` < final) and ignores other suffixes (`-foss`, `(45)`, `+build`). Tags without a number (`nightly`) are compared as normalized text. If they still differ, the status is "unknown", or "update available" when APK Manager installed a different release.
+4. After downloading, the APK's `versionCode` is authoritative (no downgrades).
 
 ### Asset selection
 
 1. Only `.apk` assets (later also `.apks` / `.xapk`). Ignore checksums, signatures and debug builds.
-2. Apply the per-app include/exclude regex.
+2. Apply the per-app include/exclude regex (case-insensitive, matched anywhere in the file name; an invalid pattern is ignored). The details screen previews which assets each filter keeps.
 3. Rank by device ABI (`Build.SUPPORTED_ABIS` order, ABI tokens such as `arm64`, `aarch64`, `armv7`, `x86_64` in the file name), then universal APKs, then debug builds. Incompatible ABIs are left out.
 4. If the choice is still ambiguous, ask the user once and remember the asset name. Later releases match it with versions and numbers ignored (`app-v1.2.0-arm64.apk` matches `app-v1.3.1-arm64.apk`).
 
@@ -147,7 +150,7 @@ APK Manager has no server, so it cannot keep a client secret. GitHub's **OAuth d
 pick APK → download → verify file → inspect APK → compare with installed app → install → clean up
 ```
 
-1. **Pick the APK** with `ApkAssets.select` (device ABI, remembered asset name).
+1. **Pick the APK** with `ApkAssets.select` (asset filter, device ABI, remembered asset name).
 2. **Download** through the asset API URL (`GET /repos/{owner}/{repo}/releases/assets/{id}` with `Accept: application/octet-stream`), for public and private repositories alike. The redirect to the storage host is followed **without** the `Authorization` header. The SHA-256 digest is computed while the file is written to the cache directory.
 3. **Verify the file:** size and SHA-256 digest (from the release asset's `digest` field when GitHub provides it).
 4. **Inspect the APK:** `PackageManager.getPackageArchiveInfo(…, GET_SIGNING_CERTIFICATES)` gives the package name, version code and signing certificates (SHA-256 of each certificate).
@@ -156,7 +159,7 @@ pick APK → download → verify file → inspect APK → compare with installed
    - the installed app's signer must be in the APK's signing lineage (APK Signature Scheme v3 key rotation); apps with several signers need the same signer set,
    - no downgrade (lower `versionCode`).
 6. **Install** through a `PackageInstaller` session (`MODE_FULL_INSTALL`, `setRequireUserAction(USER_ACTION_NOT_REQUIRED)` on Android 12+, package source "downloaded file"). The session status arrives at a non-exported broadcast receiver through a mutable, explicit `PendingIntent`. `STATUS_PENDING_USER_ACTION` carries the system confirmation, which the UI launches while the app is in the foreground.
-7. **Clean up** the downloaded file. A tracked app without a linked package is linked to the installed package.
+7. **Clean up** the downloaded file and remember the installed release. A tracked app without a linked package is linked to the installed package.
 
 Session failures are mapped to clear messages, including signature conflicts (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`) and Android developer verification failures (`EXTRA_DEVELOPER_VERIFICATION_FAILURE_REASON`, Android 16 QPR2+).
 
