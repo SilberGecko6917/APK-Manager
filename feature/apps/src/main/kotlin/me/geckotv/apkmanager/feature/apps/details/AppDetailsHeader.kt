@@ -2,14 +2,18 @@ package me.geckotv.apkmanager.feature.apps.details
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +30,7 @@ import me.geckotv.apkmanager.feature.apps.HeroIconSize
 import me.geckotv.apkmanager.feature.apps.InfoLabel
 import me.geckotv.apkmanager.feature.apps.InstallActions
 import me.geckotv.apkmanager.feature.apps.R
+import me.geckotv.apkmanager.feature.apps.hasSkippedLatestRelease
 
 /**
  * The hero of the details screen: the app's icon, what its install status is, the versions, and the
@@ -37,6 +42,8 @@ internal fun AppDetailsHeader(
     item: AppItem,
     onInstallClick: () -> Unit,
     onCancelClick: () -> Unit,
+    onSkipClick: () -> Unit,
+    onUndoSkipClick: () -> Unit,
     modifier: Modifier = Modifier,
     showProgressIndicator: Boolean = true,
 ) {
@@ -80,7 +87,46 @@ internal fun AppDetailsHeader(
                 onCancelClick = onCancelClick,
                 showProgressIndicator = showProgressIndicator,
             )
+            val latestTag = app.latestRelease?.tagName
+            if (latestTag != null && item.install == null) {
+                when {
+                    hasUpdate -> SkipAction(tag = latestTag, onClick = onSkipClick)
+                    app.hasSkippedLatestRelease -> SkippedNotice(tag = latestTag, onUndoClick = onUndoSkipClick)
+                }
+            }
         }
+    }
+}
+
+/** The button to skip the update to release [tag]. */
+@Composable
+private fun ColumnScope.SkipAction(
+    tag: String,
+    onClick: () -> Unit,
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.align(Alignment.CenterHorizontally),
+        colors = ButtonDefaults.textButtonColors(contentColor = LocalContentColor.current),
+    ) {
+        Text(stringResource(R.string.feature_apps_details_skip, tag))
+    }
+}
+
+/** Says that release [tag] is skipped, and offers to stop skipping it. */
+@Composable
+private fun SkippedNotice(
+    tag: String,
+    onUndoClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.feature_apps_status_skipped, tag),
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        TextButton(onClick = onUndoClick) { Text(stringResource(R.string.feature_apps_details_skip_undo)) }
     }
 }
 

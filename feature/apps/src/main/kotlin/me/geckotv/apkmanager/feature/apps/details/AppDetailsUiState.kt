@@ -16,6 +16,7 @@ sealed interface AppDetailsUiState {
      * @property installedApps the installed apps to pick from while the list is shown, `null` otherwise.
      * @property isConfirmingRemove whether the user is asked to confirm that the app is removed.
      * @property expandedReleaseId the release of the history whose notes are shown, if any.
+     * @property optionsSheet the sheet to edit an advanced option that is shown, `null` if none is.
      */
     data class Ready(
         val item: AppItem,
@@ -23,7 +24,23 @@ sealed interface AppDetailsUiState {
         val installedApps: List<InstalledApp>?,
         val isConfirmingRemove: Boolean,
         val expandedReleaseId: Long?,
+        val optionsSheet: OptionsSheet? = null,
     ) : AppDetailsUiState
+}
+
+/** A sheet to edit one of the advanced options of an app. */
+sealed interface OptionsSheet {
+    /**
+     * The sheet for the APK filter.
+     *
+     * @property supportedAbis the ABIs of this device, to preview which APK would be installed.
+     */
+    data class AssetFilterSheet(
+        val supportedAbis: List<String>,
+    ) : OptionsSheet
+
+    /** The sheet for the pattern that extracts the version from release tags. */
+    data object VersionPatternSheet : OptionsSheet
 }
 
 /** The newest releases of an app, loaded from the source. */

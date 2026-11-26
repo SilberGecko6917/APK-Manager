@@ -48,12 +48,14 @@ import me.geckotv.apkmanager.core.designsystem.component.SectionItemIcon
 import me.geckotv.apkmanager.core.designsystem.component.SwitchSectionItem
 import me.geckotv.apkmanager.core.designsystem.component.section
 import me.geckotv.apkmanager.core.designsystem.icon.ApkManagerIcons
+import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.TrackedApp
 import me.geckotv.apkmanager.feature.apps.InfoLabel
 import me.geckotv.apkmanager.feature.apps.PackagePicker
 import me.geckotv.apkmanager.feature.apps.R
 import me.geckotv.apkmanager.feature.apps.formatDate
+import me.geckotv.apkmanager.feature.apps.isInstalledRelease
 import me.geckotv.apkmanager.feature.apps.text
 
 /**
@@ -112,6 +114,16 @@ fun AppDetailsRoute(
         onRemoveClick = viewModel::showRemoveConfirmation,
         onRemoveConfirm = viewModel::remove,
         onRemoveDismiss = viewModel::dismissRemoveConfirmation,
+        options =
+            AppDetailsOptionsActions(
+                onSkipClick = viewModel::skipLatestRelease,
+                onUndoSkipClick = viewModel::undoSkip,
+                onAssetFilterClick = viewModel::showAssetFilter,
+                onAssetFilterSave = viewModel::saveAssetFilter,
+                onVersionPatternClick = viewModel::showVersionPattern,
+                onVersionPatternSave = viewModel::saveVersionPattern,
+                onDismiss = viewModel::dismissOptionsSheet,
+            ),
         modifier = modifier,
         bottomContentPadding = bottomContentPadding,
     )
@@ -138,28 +150,20 @@ internal fun AppDetailsScreen(
     onRemoveClick: () -> Unit,
     onRemoveConfirm: () -> Unit,
     onRemoveDismiss: () -> Unit,
+    options: AppDetailsOptionsActions,
     modifier: Modifier = Modifier,
     bottomContentPadding: Dp = 0.dp,
     showProgressIndicator: Boolean = true,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val ready = uiState as? AppDetailsUiState.Ready
+    val app = ready?.item?.app
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             ApkManagerTopAppBar(
-                title =
-                    ready
-                        ?.item
-                        ?.app
-                        ?.displayName
-                        .orEmpty(),
-                subtitle =
-                    ready
-                        ?.item
-                        ?.app
-                        ?.repository
-                        ?.fullName,
+                title = app?.displayName.orEmpty(),
+                subtitle = app?.repository?.fullName,
                 navigationIcon = { BackButton(onClick = onBack) },
                 scrollBehavior = scrollBehavior,
             )
@@ -178,6 +182,7 @@ internal fun AppDetailsScreen(
                 onRetryHistoryClick = onRetryHistoryClick,
                 onReleaseClick = onReleaseClick,
                 onRemoveClick = onRemoveClick,
+                options = options,
                 contentPadding =
                     PaddingValues(
                         start = 16.dp,
@@ -196,6 +201,7 @@ internal fun AppDetailsScreen(
             onPickerBack = onPickerBack,
             onRemoveConfirm = onRemoveConfirm,
             onRemoveDismiss = onRemoveDismiss,
+            options = options,
         )
     }
 }
@@ -210,6 +216,7 @@ private fun AppDetailsList(
     onRetryHistoryClick: () -> Unit,
     onReleaseClick: (Long) -> Unit,
     onRemoveClick: () -> Unit,
+    options: AppDetailsOptionsActions,
     contentPadding: PaddingValues,
     showProgressIndicator: Boolean,
     modifier: Modifier = Modifier,
@@ -218,6 +225,7 @@ private fun AppDetailsList(
     val app = state.item.app
     val whatsNewTitle = stringResource(R.string.feature_apps_details_whats_new)
     val settingsTitle = stringResource(R.string.feature_apps_details_settings)
+    val advancedTitle = stringResource(R.string.feature_apps_details_advanced)
     val historyTitle = stringResource(R.string.feature_apps_details_history)
     LazyColumn(modifier = modifier.fillMaxSize(), contentPadding = contentPadding) {
         item(key = "header", contentType = "Header") {
@@ -225,12 +233,16 @@ private fun AppDetailsList(
                 item = state.item,
                 onInstallClick = onInstallClick,
                 onCancelClick = onCancelClick,
+                onSkipClick = options.onSkipClick,
+                onUndoSkipClick = options.onUndoSkipClick,
                 modifier = Modifier.padding(top = 8.dp),
                 showProgressIndicator = showProgressIndicator,
             )
         }
         app.latestRelease?.let { release ->
-            section(items = listOf(release), title = whatsNewTitle, key = { "whats-new" }) { WhatsNewCard(it) }
+            section(items = listOf(release), title = whatsNewTitle, key = { "whats-new" }) {
+                WhatsNewCard(it, isInstalled = app.isInstalledRelease(it))
+            }
         }
         section(items = SettingsRow.entries, title = settingsTitle, key = { it }) { row ->
             SettingsItem(
@@ -241,6 +253,7 @@ private fun AppDetailsList(
                 onOpenRepositoryClick = { uriHandler.openUri(app.repository.htmlUrl) },
             )
         }
+        advancedSection(title = advancedTitle, app = app, options = options)
         releaseHistory(
             title = historyTitle,
             state = state,
@@ -308,10 +321,11 @@ private fun SettingsItem(
     }
 }
 
-/** The latest [release]: its title, date and notes. */
+/** The latest [release]: its title, date and notes, and whether it is the one APK Manager installed. */
 @Composable
 private fun WhatsNewCard(
     release: Release,
+    isInstalled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val containerColor = MaterialTheme.colorScheme.surfaceContainer
@@ -339,6 +353,7 @@ private fun WhatsNewCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                if (isInstalled) InfoLabel(text = stringResource(R.string.feature_apps_details_installed_label))
                 if (release.isPrerelease) InfoLabel(text = stringResource(R.string.feature_apps_pre_release))
             }
             if (release.body.isNullOrBlank()) {
@@ -402,6 +417,7 @@ private fun LazyListScope.releaseHistory(
                 ReleaseHistoryItem(
                     entry = entry,
                     isExpanded = entry.release.id == state.expandedReleaseId,
+                    isInstalled = state.item.app.isInstalledRelease(entry.release),
                     onClick = { onReleaseClick(entry.release.id) },
                     onOpenClick = { onOpenReleaseClick(entry.release) },
                 )
@@ -444,7 +460,10 @@ private fun RemoveButton(
     }
 }
 
-/** The sheets of the screen: the installed apps to link, and the confirmation to remove the app. */
+/**
+ * The sheets of the screen: the installed apps to link, the confirmation to remove the app, and the
+ * editors of the advanced options.
+ */
 @Composable
 private fun AppDetailsSheets(
     state: AppDetailsUiState.Ready,
@@ -452,6 +471,7 @@ private fun AppDetailsSheets(
     onPickerBack: () -> Unit,
     onRemoveConfirm: () -> Unit,
     onRemoveDismiss: () -> Unit,
+    options: AppDetailsOptionsActions,
 ) {
     val app = state.item.app
     state.installedApps?.let { installedApps ->
@@ -469,4 +489,5 @@ private fun AppDetailsSheets(
             RemoveConfirmation(name = app.displayName, onCancelClick = onRemoveDismiss, onRemoveClick = onRemoveConfirm)
         }
     }
+    OptionsSheets(state = state, options = options)
 }

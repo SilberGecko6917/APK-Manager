@@ -53,6 +53,7 @@ internal fun ReleaseHistoryItem(
     onClick: () -> Unit,
     onOpenClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isInstalled: Boolean = false,
 ) {
     val release = entry.release
     Surface(
@@ -61,7 +62,12 @@ internal fun ReleaseHistoryItem(
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column {
-            ReleaseHistoryHeader(release = release, isExpanded = isExpanded, onClick = onClick)
+            ReleaseHistoryHeader(
+                release = release,
+                isExpanded = isExpanded,
+                isInstalled = isInstalled,
+                onClick = onClick,
+            )
             AnimatedVisibility(visible = isExpanded) {
                 Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
                     ReleaseNotesOrNone(notes = release.body)
@@ -78,6 +84,7 @@ internal fun ReleaseHistoryItem(
 private fun ReleaseHistoryHeader(
     release: Release,
     isExpanded: Boolean,
+    isInstalled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -119,6 +126,7 @@ private fun ReleaseHistoryHeader(
                 )
             }
         }
+        if (isInstalled) InfoLabel(text = stringResource(R.string.feature_apps_details_installed_label))
         if (release.isPrerelease) InfoLabel(text = stringResource(R.string.feature_apps_pre_release))
         Icon(
             painter = painterResource(ApkManagerIcons.ChevronRight),
