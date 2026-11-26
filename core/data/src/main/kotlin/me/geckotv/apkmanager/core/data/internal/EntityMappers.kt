@@ -77,4 +77,5 @@ internal fun TrackedAppWithRelease.toTrackedApp(installedApp: InstalledApp?): Tr
         installedApp = installedApp,
         addedAt = Instant.ofEpochMilli(app.addedAt),
         lastCheckedAt = app.lastCheckedAt?.let(Instant::ofEpochMilli),
+        notifiedReleaseId = app.notifiedReleaseId,
     )

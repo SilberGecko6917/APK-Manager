@@ -5,6 +5,13 @@
     <string name="feature_settings_github_account">GitHub account</string>
     <string name="feature_settings_github_account_summary">Sign in for private repositories and higher API limits</string>
     <string name="feature_settings_appearance">Appearance</string>
+    <string name="feature_settings_updates">Updates</string>
+    <string name="feature_settings_background_checks">Check for updates in the background</string>
+    <string name="feature_settings_background_checks_summary">Get a notification when a tracked app has a new release</string>
+    <string name="feature_settings_unmetered_only">Only on Wi-Fi</string>
+    <string name="feature_settings_unmetered_only_summary">Don\'t use mobile data for background checks</string>
+    <string name="feature_settings_check_interval">Check every</string>
+    <string name="feature_settings_check_interval_hours">%d h</string>
     <string name="feature_settings_theme_system">System</string>
     <string name="feature_settings_theme_light">Light</string>
     <string name="feature_settings_theme_dark">Dark</string>

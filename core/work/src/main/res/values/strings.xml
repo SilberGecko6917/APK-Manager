@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_work_channel_updates">App updates</string>
+    <string name="core_work_channel_updates_description">New releases of the apps you track</string>
+    <string name="core_work_update_title">Update for %1$s</string>
+    <string name="core_work_update_text">%1$s → %2$s</string>
+    <string name="core_work_update_text_unknown_version">New version %1$s</string>
+    <plurals name="core_work_updates_summary">
+        <item quantity="one">%d update available</item>
+        <item quantity="other">%d updates available</item>
+    </plurals>
+</resources>

@@ -46,8 +46,9 @@ The first usable version: track GitHub apps and install updates manually.
 
 ## v0.2 — Background
 
-- [ ] Periodic background update checks (WorkManager) with configurable interval and constraints
-- [ ] Update notifications (one per app, grouped), download progress notifications
+- [x] Periodic background update checks (WorkManager) with configurable interval and constraints (`feat/background-checks`)
+- [x] Update notifications (one per app, grouped)
+- [ ] Download progress notifications
 - [ ] Per-app asset filters (include/exclude regex), ABI ranking, pre-release toggle
 - [ ] Version detection improvements (release ID tracking, tag regex override, "mark as up to date")
 

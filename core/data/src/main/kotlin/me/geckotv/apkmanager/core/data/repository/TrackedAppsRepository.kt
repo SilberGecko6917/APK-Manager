@@ -66,6 +66,12 @@ interface TrackedAppsRepository {
         assetName: String?,
     )
 
+    /** Remembers that the user was notified about release [releaseId] of app [id]. */
+    suspend fun setNotifiedRelease(
+        id: Long,
+        releaseId: Long,
+    )
+
     /** Changes whether pre-releases count as updates and checks the app again. */
     suspend fun setIncludePrereleases(
         id: Long,

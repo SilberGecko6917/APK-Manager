@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import me.geckotv.apkmanager.core.model.ThemeMode
+import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -45,6 +46,9 @@ class DataStoreUserSettingsRepositoryTest {
             repository.setHapticsEnabled(false)
             repository.setOnboardingCompleted(true)
             repository.setSelfUpdatesTracked(true)
+            repository.setBackgroundChecksEnabled(false)
+            repository.setCheckInterval(UpdateCheckInterval.Every24Hours)
+            repository.setCheckOnlyOnUnmeteredNetwork(true)
 
             repository.settings.test {
                 assertEquals(
@@ -55,6 +59,9 @@ class DataStoreUserSettingsRepositoryTest {
                         hapticsEnabled = false,
                         onboardingCompleted = true,
                         selfUpdatesTracked = true,
+                        backgroundChecksEnabled = false,
+                        checkInterval = UpdateCheckInterval.Every24Hours,
+                        checkOnlyOnUnmeteredNetwork = true,
                     ),
                     awaitItem(),
                 )

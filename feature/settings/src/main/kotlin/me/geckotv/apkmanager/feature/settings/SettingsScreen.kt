@@ -36,6 +36,7 @@ import me.geckotv.apkmanager.core.designsystem.component.SwitchSectionItem
 import me.geckotv.apkmanager.core.designsystem.icon.ApkManagerIcons
 import me.geckotv.apkmanager.core.designsystem.theme.ApkManagerTheme
 import me.geckotv.apkmanager.core.model.ThemeMode
+import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UserSettings
 
 private const val SOURCE_CODE_URL = "https://github.com/SilberGecko6917/APK-Manager"
@@ -72,6 +73,9 @@ fun SettingsRoute(
         onDynamicColorChange = viewModel::setUseDynamicColor,
         onAmoledBlackChange = viewModel::setUseAmoledBlack,
         onHapticsChange = viewModel::setHapticsEnabled,
+        onBackgroundChecksChange = viewModel::setBackgroundChecksEnabled,
+        onCheckIntervalChange = viewModel::setCheckInterval,
+        onUnmeteredOnlyChange = viewModel::setCheckOnlyOnUnmeteredNetwork,
         onOpenSourceCode = { uriHandler.openUri(SOURCE_CODE_URL) },
         onOpenLicense = { uriHandler.openUri(LICENSE_URL) },
         onOpenAccount = onOpenAccount,
@@ -89,6 +93,9 @@ internal fun SettingsScreen(
     onDynamicColorChange: (Boolean) -> Unit,
     onAmoledBlackChange: (Boolean) -> Unit,
     onHapticsChange: (Boolean) -> Unit,
+    onBackgroundChecksChange: (Boolean) -> Unit,
+    onCheckIntervalChange: (UpdateCheckInterval) -> Unit,
+    onUnmeteredOnlyChange: (Boolean) -> Unit,
     onOpenSourceCode: () -> Unit,
     onOpenLicense: () -> Unit,
     onOpenAccount: () -> Unit,
@@ -117,6 +124,14 @@ internal fun SettingsScreen(
         ) {
             if (uiState is SettingsUiState.Success) {
                 item(key = "account") { AccountSettings(onOpenAccount = onOpenAccount) }
+                item(key = "updates") {
+                    UpdateSettings(
+                        settings = uiState.settings,
+                        onBackgroundChecksChange = onBackgroundChecksChange,
+                        onCheckIntervalChange = onCheckIntervalChange,
+                        onUnmeteredOnlyChange = onUnmeteredOnlyChange,
+                    )
+                }
                 item(key = "appearance") {
                     AppearanceSettings(
                         settings = uiState.settings,
@@ -135,6 +150,54 @@ internal fun SettingsScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun UpdateSettings(
+    settings: UserSettings,
+    onBackgroundChecksChange: (Boolean) -> Unit,
+    onCheckIntervalChange: (UpdateCheckInterval) -> Unit,
+    onUnmeteredOnlyChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Section(title = stringResource(R.string.feature_settings_updates)) {
+            item {
+                SwitchSectionItem(
+                    headline = stringResource(R.string.feature_settings_background_checks),
+                    supportingText = stringResource(R.string.feature_settings_background_checks_summary),
+                    checked = settings.backgroundChecksEnabled,
+                    onCheckedChange = onBackgroundChecksChange,
+                    leadingContent = { SectionItemIcon(ApkManagerIcons.Sync) },
+                )
+            }
+            if (settings.backgroundChecksEnabled) {
+                item {
+                    SwitchSectionItem(
+                        headline = stringResource(R.string.feature_settings_unmetered_only),
+                        supportingText = stringResource(R.string.feature_settings_unmetered_only_summary),
+                        checked = settings.checkOnlyOnUnmeteredNetwork,
+                        onCheckedChange = onUnmeteredOnlyChange,
+                        leadingContent = { SectionItemIcon(ApkManagerIcons.Schedule) },
+                    )
+                }
+            }
+        }
+        if (settings.backgroundChecksEnabled) {
+            SectionHeader(text = stringResource(R.string.feature_settings_check_interval))
+            SingleChoiceButtonGroup(
+                options =
+                    UpdateCheckInterval.entries.map { interval ->
+                        ButtonGroupOption(
+                            stringResource(R.string.feature_settings_check_interval_hours, interval.hours),
+                        )
+                    },
+                selectedIndex = settings.checkInterval.ordinal,
+                onOptionSelect = { index -> onCheckIntervalChange(UpdateCheckInterval.entries[index]) },
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -291,6 +354,9 @@ private fun SettingsScreenPreviewContent() {
         onDynamicColorChange = {},
         onAmoledBlackChange = {},
         onHapticsChange = {},
+        onBackgroundChecksChange = {},
+        onCheckIntervalChange = {},
+        onUnmeteredOnlyChange = {},
         onOpenSourceCode = {},
         onOpenLicense = {},
         onOpenAccount = {},
