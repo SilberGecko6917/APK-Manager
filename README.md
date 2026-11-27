@@ -78,6 +78,7 @@ Security issues: see [SECURITY.md](SECURITY.md).
 - The visual language is inspired by [Essentials](https://github.com/sameerasw/essentials) by Sameera Sandakelum (MIT License).
 - Typeface: [Google Sans Flex](https://github.com/googlefonts/googlesans-flex) (SIL Open Font License 1.1), see [third_party](third_party/README.md).
 - Icons: [Material Symbols](https://fonts.google.com/icons) (Apache License 2.0).
+- Installs without confirmation through [Shizuku](https://github.com/RikkaApps/Shizuku-API) (Shizuku API, MIT License).
 - The idea of tracking apps directly from their source is inspired by [Obtainium](https://github.com/ImranR98/Obtainium).
 
 ## License

@@ -6,11 +6,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import me.geckotv.apkmanager.core.auth.AuthState
+import me.geckotv.apkmanager.core.installer.ShizukuState
+import me.geckotv.apkmanager.core.model.InstallerBackend
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UpdatePolicy
 import me.geckotv.apkmanager.core.model.UserSettings
 import me.geckotv.apkmanager.core.testing.FakeAuthRepository
+import me.geckotv.apkmanager.core.testing.FakeInstallerBackends
 import me.geckotv.apkmanager.core.testing.FakeUserSettingsRepository
 import me.geckotv.apkmanager.core.testing.MainDispatcherRule
 import org.junit.Assert.assertEquals
@@ -25,12 +28,13 @@ class SettingsViewModelTest {
 
     private val repository = FakeUserSettingsRepository()
     private val authRepository = FakeAuthRepository()
+    private val installerBackends = FakeInstallerBackends()
     private lateinit var viewModel: SettingsViewModel
 
     // Created after MainDispatcherRule has replaced Dispatchers.Main, so viewModelScope uses the test dispatcher.
     @Before
     fun setUp() {
-        viewModel = SettingsViewModel(repository, authRepository)
+        viewModel = SettingsViewModel(repository, authRepository, installerBackends)
     }
 
     @Test
@@ -49,7 +53,8 @@ class SettingsViewModelTest {
     fun uiStateShowsTheSignedInAccount() =
         runTest {
             val account = FakeAuthRepository.sampleAccount()
-            val signedIn = SettingsViewModel(repository, FakeAuthRepository(AuthState.SignedIn(account)))
+            val signedIn =
+                SettingsViewModel(repository, FakeAuthRepository(AuthState.SignedIn(account)), installerBackends)
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { signedIn.uiState.collect() }
 
             assertEquals(SettingsUiState.Success(UserSettings(), account = account), signedIn.uiState.value)
@@ -101,4 +106,43 @@ class SettingsViewModelTest {
                 repository.current,
             )
         }
+
+    @Test
+    fun selectingTheInstallerBackendIsWrittenToTheRepository() =
+        runTest {
+            viewModel.setInstallerBackend(InstallerBackend.Shizuku)
+            assertEquals(InstallerBackend.Shizuku, repository.current.installerBackend)
+
+            viewModel.setInstallerBackend(InstallerBackend.System)
+            assertEquals(InstallerBackend.System, repository.current.installerBackend)
+        }
+
+    @Test
+    fun uiStateFollowsShizukuState() =
+        runTest {
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect() }
+            assertEquals(ShizukuState.NotInstalled, (viewModel.uiState.value as SettingsUiState.Success).shizukuState)
+
+            installerBackends.shizukuState.value = ShizukuState.Ready(isRoot = true)
+
+            assertEquals(
+                ShizukuState.Ready(isRoot = true),
+                (viewModel.uiState.value as SettingsUiState.Success).shizukuState,
+            )
+        }
+
+    @Test
+    fun requestingShizukuPermissionAsksTheBackends() {
+        viewModel.requestShizukuPermission()
+
+        assertEquals(1, installerBackends.permissionRequests)
+    }
+
+    @Test
+    fun refreshingShizukuChecksTheBackendsAgain() {
+        viewModel.refreshShizukuState()
+        viewModel.refreshShizukuState()
+
+        assertEquals(2, installerBackends.refreshes)
+    }
 }

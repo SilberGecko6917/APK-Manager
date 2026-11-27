@@ -13,6 +13,7 @@ import me.geckotv.apkmanager.core.data.repository.UpdateCheckResult
 import me.geckotv.apkmanager.core.installer.InstallState
 import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.GitHubRepository
+import me.geckotv.apkmanager.core.model.InstallerBackend
 import me.geckotv.apkmanager.core.model.Release
 import me.geckotv.apkmanager.core.model.SourceError
 import me.geckotv.apkmanager.core.model.SourceResult
@@ -22,6 +23,7 @@ import me.geckotv.apkmanager.core.model.UpdateStatus
 import me.geckotv.apkmanager.core.testing.FakeAppInstaller
 import me.geckotv.apkmanager.core.testing.FakeDeviceInfo
 import me.geckotv.apkmanager.core.testing.FakeInstalledAppsRepository
+import me.geckotv.apkmanager.core.testing.FakeInstallerBackends
 import me.geckotv.apkmanager.core.testing.FakeTrackedAppsRepository
 import me.geckotv.apkmanager.core.testing.FakeUserSettingsRepository
 import me.geckotv.apkmanager.core.testing.MainDispatcherRule
@@ -50,6 +52,7 @@ class AppDetailsViewModelTest {
     private val installer = FakeAppInstaller()
     private val deviceInfo = FakeDeviceInfo()
     private val userSettings = FakeUserSettingsRepository()
+    private val installerBackends = FakeInstallerBackends()
     private val releases = listOf(TestData.release(11, "v1.1.0"), TestData.release(10, "v1.0.0"))
 
     @Test
@@ -109,7 +112,16 @@ class AppDetailsViewModelTest {
                 object : TrackedAppsRepository by trackedApps {
                     override suspend fun releaseHistory(id: Long) = history.await()
                 }
-            val viewModel = AppDetailsViewModel(1, repository, installedApps, installer, deviceInfo, userSettings)
+            val viewModel =
+                AppDetailsViewModel(
+                    1,
+                    repository,
+                    installedApps,
+                    installer,
+                    deviceInfo,
+                    userSettings,
+                    installerBackends,
+                )
             collectUiState(viewModel)
             assertEquals(ReleaseHistoryState.Loading, viewModel.ready().history)
 
@@ -510,6 +522,21 @@ class AppDetailsViewModelTest {
         }
 
     @Test
+    fun anActiveShizukuBackendInstallsWithoutConfirmation() =
+        runTest {
+            setInstalledApp(installer = "com.android.vending")
+            val viewModel = createViewModel(appId = 1)
+            collectUiState(viewModel)
+            assertEquals(UpdateConfirmHint.AnotherInstaller, viewModel.ready().confirmHint)
+
+            installerBackends.activeBackend.value = InstallerBackend.Shizuku
+            assertNull(viewModel.ready().confirmHint)
+
+            installerBackends.activeBackend.value = InstallerBackend.System
+            assertEquals(UpdateConfirmHint.AnotherInstaller, viewModel.ready().confirmHint)
+        }
+
+    @Test
     fun anAppThatIsNotInstalledHasNoConfirmHint() =
         runTest {
             val viewModel = createViewModel(appId = 2)
@@ -570,7 +597,7 @@ class AppDetailsViewModelTest {
 
     /** Created after [MainDispatcherRule] has replaced the main dispatcher, so `viewModelScope` uses the test one. */
     private fun createViewModel(appId: Long) =
-        AppDetailsViewModel(appId, trackedApps, installedApps, installer, deviceInfo, userSettings)
+        AppDetailsViewModel(appId, trackedApps, installedApps, installer, deviceInfo, userSettings, installerBackends)
 
     private fun setInstalledApp(
         installer: String?,
@@ -585,7 +612,8 @@ class AppDetailsViewModelTest {
     }
 
     private fun TestScope.confirmHint(device: FakeDeviceInfo = deviceInfo): UpdateConfirmHint? {
-        val viewModel = AppDetailsViewModel(1, trackedApps, installedApps, installer, device, userSettings)
+        val viewModel =
+            AppDetailsViewModel(1, trackedApps, installedApps, installer, device, userSettings, installerBackends)
         collectUiState(viewModel)
         return viewModel.ready().confirmHint
     }

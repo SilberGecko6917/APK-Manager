@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- To open the Shizuku app (package visibility on Android 11+). -->
+    <queries>
+        <package android:name="moe.shizuku.privileged.api" />
+    </queries>
+</manifest>

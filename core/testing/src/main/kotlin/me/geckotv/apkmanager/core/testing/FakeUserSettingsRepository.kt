@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import me.geckotv.apkmanager.core.datastore.UserSettingsRepository
+import me.geckotv.apkmanager.core.model.InstallerBackend
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UpdatePolicy
@@ -54,4 +55,7 @@ class FakeUserSettingsRepository(
 
     override suspend fun setAutoUpdateOnlyWhileCharging(autoUpdateOnlyWhileCharging: Boolean) =
         state.update { it.copy(autoUpdateOnlyWhileCharging = autoUpdateOnlyWhileCharging) }
+
+    override suspend fun setInstallerBackend(installerBackend: InstallerBackend) =
+        state.update { it.copy(installerBackend = installerBackend) }
 }

@@ -16,6 +16,16 @@
             android:name=".internal.InstallActionReceiver"
             android:exported="false" />
 
+        <!-- Receives the binder of Shizuku (or Sui) for installs without confirmation. Only the
+             system may call it. -->
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
         <service
             android:name=".internal.InstallService"
             android:exported="false"

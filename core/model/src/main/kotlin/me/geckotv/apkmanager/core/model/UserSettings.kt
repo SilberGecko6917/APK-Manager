@@ -23,6 +23,8 @@ data class UserSettings(
     val autoUpdateOnlyOnUnmeteredNetwork: Boolean = true,
     /** Whether automatic updates wait until the device is charging. */
     val autoUpdateOnlyWhileCharging: Boolean = false,
+    /** How APKs are installed. */
+    val installerBackend: InstallerBackend = InstallerBackend.System,
 )
 
 /** How often APK Manager checks for updates in the background. */

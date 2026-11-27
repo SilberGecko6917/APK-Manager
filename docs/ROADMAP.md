@@ -55,7 +55,8 @@ The first usable version: track GitHub apps and install updates manually.
 ## v0.3 — Automatic updates
 
 - [x] Unattended updates (`USER_ACTION_NOT_REQUIRED`) for apps installed through APK Manager
-- [ ] Installer backends: Shizuku and root (Dhizuku later)
+- [x] Installer backend: Shizuku (and Sui)
+- [ ] Installer backend: root (Dhizuku later)
 - [x] Per-app update policy: notify only / install automatically (when Android needs a confirmation, the update is downloaded and waits for a tap)
 - [x] Global constraints: unmetered network only, while charging, battery not low
 - [ ] Clear handling of Android developer verification failures

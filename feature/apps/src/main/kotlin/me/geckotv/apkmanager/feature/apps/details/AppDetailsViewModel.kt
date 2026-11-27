@@ -25,8 +25,10 @@ import me.geckotv.apkmanager.core.data.repository.TrackedAppsRepository
 import me.geckotv.apkmanager.core.datastore.UserSettingsRepository
 import me.geckotv.apkmanager.core.installer.AppInstaller
 import me.geckotv.apkmanager.core.installer.InstallState
+import me.geckotv.apkmanager.core.installer.InstallerBackends
 import me.geckotv.apkmanager.core.model.AssetFilter
 import me.geckotv.apkmanager.core.model.InstalledApp
+import me.geckotv.apkmanager.core.model.InstallerBackend
 import me.geckotv.apkmanager.core.model.SourceResult
 import me.geckotv.apkmanager.core.model.TrackedApp
 import me.geckotv.apkmanager.core.model.UnattendedUpdates
@@ -40,7 +42,7 @@ import me.geckotv.apkmanager.feature.apps.toMessage
  *
  * It has one function per action of the screen; splitting it would only scatter them.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 @HiltViewModel(assistedFactory = AppDetailsViewModel.Factory::class)
 class AppDetailsViewModel
     @AssistedInject
@@ -51,6 +53,7 @@ class AppDetailsViewModel
         private val appInstaller: AppInstaller,
         private val deviceInfo: DeviceInfo,
         private val userSettingsRepository: UserSettingsRepository,
+        installerBackends: InstallerBackends,
     ) : ViewModel() {
         @AssistedFactory
         interface Factory {
@@ -70,7 +73,8 @@ class AppDetailsViewModel
                 appInstaller.installs,
                 localState,
                 userSettingsRepository.settings,
-            ) { app, installs, local, settings ->
+                installerBackends.activeBackend,
+            ) { app, installs, local, settings, backend ->
                 if (app == null) {
                     AppDetailsUiState.Loading
                 } else {
@@ -82,7 +86,8 @@ class AppDetailsViewModel
                         expandedReleaseId = local.expandedReleaseId,
                         optionsSheet = local.optionsSheet,
                         defaultUpdatePolicy = settings.defaultUpdatePolicy,
-                        confirmHint = app.confirmHint(deviceInfo),
+                        // Shizuku installs every update without asking.
+                        confirmHint = app.confirmHint(deviceInfo).takeUnless { backend == InstallerBackend.Shizuku },
                     )
                 }
             }.stateIn(

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import me.geckotv.apkmanager.core.model.InstallerBackend
 import me.geckotv.apkmanager.core.model.ThemeMode
 import me.geckotv.apkmanager.core.model.UpdateCheckInterval
 import me.geckotv.apkmanager.core.model.UpdatePolicy
@@ -79,6 +80,10 @@ internal class DataStoreUserSettingsRepository
             dataStore.edit { it[Keys.AUTO_UPDATE_ONLY_WHILE_CHARGING] = autoUpdateOnlyWhileCharging }
         }
 
+        override suspend fun setInstallerBackend(installerBackend: InstallerBackend) {
+            dataStore.edit { it[Keys.INSTALLER_BACKEND] = installerBackend.name }
+        }
+
         private fun Preferences.toUserSettings(): UserSettings {
             val defaults = UserSettings()
             return UserSettings(
@@ -97,6 +102,7 @@ internal class DataStoreUserSettingsRepository
                     this[Keys.AUTO_UPDATE_ONLY_ON_UNMETERED_NETWORK] ?: defaults.autoUpdateOnlyOnUnmeteredNetwork,
                 autoUpdateOnlyWhileCharging =
                     this[Keys.AUTO_UPDATE_ONLY_WHILE_CHARGING] ?: defaults.autoUpdateOnlyWhileCharging,
+                installerBackend = enumValue(Keys.INSTALLER_BACKEND, defaults.installerBackend),
             )
         }
 
@@ -119,5 +125,6 @@ internal class DataStoreUserSettingsRepository
             val DEFAULT_UPDATE_POLICY = stringPreferencesKey("default_update_policy")
             val AUTO_UPDATE_ONLY_ON_UNMETERED_NETWORK = booleanPreferencesKey("auto_update_only_on_unmetered_network")
             val AUTO_UPDATE_ONLY_WHILE_CHARGING = booleanPreferencesKey("auto_update_only_while_charging")
+            val INSTALLER_BACKEND = stringPreferencesKey("installer_backend")
         }
     }

@@ -6,6 +6,8 @@ plugins {
 android {
     namespace = "me.geckotv.apkmanager.core.installer"
     testOptions.unitTests.isIncludeAndroidResources = true
+    buildFeatures.aidl = true
+    defaultConfig.consumerProguardFiles("consumer-rules.pro")
 }
 
 dependencies {
@@ -13,10 +15,13 @@ dependencies {
 
     implementation(projects.core.common)
     implementation(projects.core.data)
+    implementation(projects.core.datastore)
     implementation(projects.core.network)
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp)
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
 
     testImplementation(projects.core.testing)
     testImplementation(libs.androidx.test.core)
